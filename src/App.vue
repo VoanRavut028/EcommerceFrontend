@@ -1,17 +1,13 @@
+<!-- src/App.vue -->
 <script setup lang="ts">
-import { onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
-import Testing from'./views/Testing.vue'
+import Navbar from "@/views/NavbarView.vue";
+import HomePage from "./views/HomePage.vue";
 const authStore = useAuthStore();
-
 </script>
 
 <template>
- 
-    <!--<Testing></Testing>-->
+  <home-page></home-page>
   <router-view />
+  <!-- <AuthModal v-if="authStore.showAuthModal" /> -->
 </template>
-
-
-
-

@@ -5,10 +5,10 @@ import authInitApi from "@/services/authInit";
 const routes = [
   {
     path: "/",
-    redirect: "/home",
+    redirect: "/index",
   },
   {
-    path: "/home",
+    path: "/index",
     component: () => import("@/views/HomePage.vue"),
   },
   {
@@ -91,7 +91,7 @@ const initAuth = () => {
 
 router.beforeEach(async (to, from, next) => {
   await initAuth();
-  console.log(`Accesstoken ${tokenStore.get()}`);
+
   const isAuthenticated = tokenStore.get() !== null;
 
   if (to.meta.requiresAuth && !isAuthenticated) {

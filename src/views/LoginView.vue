@@ -195,6 +195,7 @@ const emit = defineEmits<{
 }>();
 const handleClosePopup = () => {
   emit("close");
+  
 };
 
 const switchToRegister = () => {

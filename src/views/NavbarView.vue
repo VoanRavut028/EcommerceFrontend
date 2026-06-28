@@ -1,24 +1,46 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useModal } from "../composables/useModal.ts";
+import { computed, onMounted, ref } from "vue";
 import BaseModal from "@/components/BaseModal.vue";
 import LoginView from "./LoginView.vue";
 import RegisterView from "./RegisterView.vue";
-
-const openModal = ref(false);
-const openRegisterModal = ref(false);
-interface NavLink {
-  label: string;
-  href: string;
-  hasDropdown?: boolean;
-}
-
+import { useAuthStore } from "@/stores/auth.ts";
+import LogoutView from "./LogoutView.vue";
+const authStore = useAuthStore();
+const openModal = computed({
+  get: () => authStore.showAuthModal,
+  set: (value) => {
+    authStore.showAuthModal = value;
+  },
+});
+const openRegisterModal = computed({
+  get: () => authStore.showAuthModal && authStore.showAuthModal,
+  set: (value) => {
+    authStore.showAuthModal = value;
+  },
+});
 const isMobileMenuOpen = ref(false);
 const showProducts = ref(false);
+const showLogoutModal = ref(false);
+
+const onLogoutSuccess = () => {
+  showLogoutModal.value = false;
+};
+const isAuthenticated = computed(() => authStore.isAuthenticated);
+const userName = computed(
+  () => authStore.user?.first_name || authStore.user?.name || "User",
+);
 
 const toggleProducts = () => {
   showProducts.value = !showProducts.value;
 };
+
+const handleLogout = async () => {
+  await authStore.logout();
+};
+
+onMounted(() => {
+  authStore.bootstrap();
+});
 </script>
 <template>
   <div>
@@ -220,20 +242,57 @@ const toggleProducts = () => {
 
           <!-- Auth Buttons -->
           <div
+            v-if="!isAuthenticated"
             class="flex items-center gap-3 text-[13px] font-bold text-gray-800"
           >
             <button
-              @click="openModal = true"
+              @click="authStore.showAuthModal = true"
               class="bg-[#e8def8] text-[#21005d] rounded-full px-6 py-2.5 text-sm font-medium tracking-wide hover:bg-[#d8cef0] transition-colors"
             >
               SIGN IN
             </button>
             <button
-              @click="openRegisterModal = true"
+              @click="authStore.showAuthModal = true"
               class="bg-[#6750a4] text-white rounded-full px-6 py-2.5 text-sm font-medium tracking-wide hover:bg-[#5b4397] transition-colors"
             >
               REGISTER
             </button>
+          </div>
+
+          <div
+            v-else
+            class="flex items-center gap-3 text-sm font-medium text-gray-700"
+          >
+            <!-- <RouterLink to="/dashboard" class="hover:text-black">
+              Dashboard
+            </RouterLink> -->
+            <button class="cursor-pointer">
+              <LogoutView></LogoutView>
+              <span class="flex text-[16px]"
+                ><svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  class="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                  />
+                </svg>
+                {{ authStore.fullName.firstName }}
+                {{ authStore.fullName.lastName }}</span
+              >
+            </button>
+            <!-- <button
+              @click="handleLogout"
+              class="text-red-600 hover:text-red-700"
+            >
+              Logout
+            </button> -->
           </div>
         </div>
       </div>
@@ -321,11 +380,12 @@ const toggleProducts = () => {
               >
             </div>
 
-            <!-- Auth Buttons in Sidebar -->
-            <div class="mt-10 space-y-4">
+            <!-- Login Signup button when auth = false -->
+
+            <div v-if="!authStore.isAuthenticated" class="mt-10 space-y-4">
               <button
                 @click="
-                  openModal = true;
+                  authStore.showAuthModal = true;
                   isMobileMenuOpen = false;
                 "
                 class="w-full bg-[#e8def8] text-[#21005d] rounded-full py-3.5 text-sm font-medium"
@@ -334,7 +394,7 @@ const toggleProducts = () => {
               </button>
               <button
                 @click="
-                  openRegisterModal = true;
+                  authStore.showAuthModal = true;
                   isMobileMenuOpen = false;
                 "
                 class="w-full bg-[#6750a4] text-white rounded-full py-3.5 text-sm font-medium"
@@ -342,28 +402,39 @@ const toggleProducts = () => {
                 REGISTER
               </button>
             </div>
+
+            <!-- hide login signup when auth = true -->
+            <div v-else class="mt-6 space-y-3">
+              <RouterLink
+                to="/dashboard"
+                class="block text-sm font-medium text-slate-700"
+              >
+                Dashboard
+              </RouterLink>
+              <span class="block text-sm text-slate-600"
+                >Hi, {{ userName }}</span
+              >
+              <button
+                @click="handleLogout"
+                class="text-sm font-medium text-red-600"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </nav>
 
-    <BaseModal :open="openModal" @close="openModal = false">
+    <BaseModal
+      :open="authStore.showAuthModal"
+      @close="authStore.showAuthModal = false"
+    >
       <LoginView
-        @close="openModal = false"
-        @close-register="
-          openModal = false;
-          openRegisterModal = true;
-        "
+        v-if="authStore.showAuthModal"
+        @close="authStore.showAuthModal = false"
+        @close-register="authStore.showAuthModal = true"
       ></LoginView>
-    </BaseModal>
-    <BaseModal :open="openRegisterModal" @close="openRegisterModal = false">
-      <RegisterView
-        @close="openRegisterModal = false"
-        @open-login="
-          openRegisterModal = false;
-          openModal = true;
-        "
-      ></RegisterView>
     </BaseModal>
   </div>
 </template>

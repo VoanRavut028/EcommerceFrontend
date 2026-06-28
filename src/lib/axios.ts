@@ -77,7 +77,7 @@ api.interceptors.response.use(
       refreshQueue.forEach(({ reject }) => reject(refreshErr));
       refreshQueue = [];
       tokenStore.clear();
-      window.location.href = "/";
+      window.location.href = "/index";
       return Promise.reject(refreshErr);
     } finally {
       isRefreshing = false;
