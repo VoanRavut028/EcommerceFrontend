@@ -1,3 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Freehand&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Fasthand&family=Freehand&family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
 @import "tailwindcss";
 @theme {
   /* Defining the primary color spectrum variables for Tailwind v4 */
@@ -9,9 +12,12 @@
   --color-primary-800: #3730a3;
   --color-brand-blue: #0066dc;
   --color-brand-dark: #111111;
-
+  --color-slat-purple: #e8def8;
+  --color-bold-purple: #6750a4;
   /* Retaining your standard structural tokens */
   --color-border: #e2e8f0;
   --color-background: #ffffff;
   --color-foreground: #111111;
+  --font-khmer: "Noto Sans Khmer", sans-serif;
+  --font-english: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
 }

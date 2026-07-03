@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { tokenStore } from "@/lib/tokenStore";
 import authInitApi from "@/services/authInit";
+
 const routes = [
   {
     path: "/",
@@ -69,33 +70,51 @@ let bootstrapped = false;
 // });
 
 let authInit: Promise<void> | null = null;
-const initAuth = () => {
-  if (!authInit) {
-    console.log("baseURL:", authInitApi.defaults.baseURL);
-    console.log("withCredentials:", authInitApi.defaults.withCredentials);
+const initAuth = async () => {
+  if (authInit) return authInit;
 
-    authInit = authInitApi
-      .post("/refresh")
-      .then(({ data }) => tokenStore.set(data.accessToken))
-      .catch((err) => {
-        console.log(
-          "refresh failed:",
-          err.response?.status,
-          err.response?.data,
-        );
-        tokenStore.clear();
-      });
-  }
+  const authStore = useAuthStore();
+  authInit = (async () => {
+    try {
+      console.log("baseURL:", authInitApi.defaults.baseURL);
+      console.log("withCredentials:", authInitApi.defaults.withCredentials);
+      await authStore.initializeAuth();
+      console.log(`Auth user is : ${authStore.user}`);
+      await authInitApi
+        .post("/refresh")
+        .then(({ data }) => tokenStore.set(data.accessToken))
+        .catch((err) => {
+          console.log(
+            "refresh failed:",
+            err.response?.status,
+            err.response?.data,
+          );
+          tokenStore.clear();
+        });
+    } catch (error) {
+      console.log("auth init failed:", error);
+    }
+  })();
+
   return authInit;
 };
 
 router.beforeEach(async (to, from, next) => {
-  await initAuth();
+  const authStore = useAuthStore();
+  const hasToken = tokenStore.get() !== null;
+  const shouldInitAuth = to.meta.requiresAuth || hasToken;
 
-  const isAuthenticated = tokenStore.get() !== null;
+  if (shouldInitAuth) {
+    await initAuth();
+  }
+
+  const isAuthenticated =
+    authStore.isAuthenticated || tokenStore.get() !== null;
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next("/login");
+    next("/index");
+  } else if (to.meta.guestOnly && isAuthenticated) {
+    next("/dashboard");
   } else {
     next();
   }

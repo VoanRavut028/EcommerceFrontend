@@ -13,6 +13,7 @@ export const useAuthStore = defineStore("auth", () => {
   const showAuthModal = ref(false);
 
   const fullName = computed(() => {
+    if (!user.value) return;
     return {
       firstName: user.value.first_name,
       lastName: user.value.last_name,
@@ -20,19 +21,29 @@ export const useAuthStore = defineStore("auth", () => {
   });
   const avatar = computed(() => user.value?.avatar ?? null);
 
-  const fetchUser = async () => {
-    const { data } = await api.get("/profile");
-    user.value = data.user;
-    isAuthenticated.value = true;
+  const initializeAuth = async () => {
+    try {
+      isLoading.value = true;
+      const res = await api.get("/profile");
+      console.log(`init auth is running success ${res.data.success}`);
+      console.log(`init auth is running success ${res.data.message}`);
+      user.value = res.data.user;
+      console.log(`User data after init: ${res.data.user}`);
+      tokenStore.set(res.data.accessToken);
+      isAuthenticated.value = true;
+    } catch (error) {
+      logout();
+    } finally {
+      isLoading.value = false;
+    }
   };
 
-  const bootstrap = async () => {
+  const refreshToken = async () => {
     isLoading.value = true;
     try {
-      const { data } = await api.post("/refresh");
+      const { data } = await authInitApi.post("/refresh");
       tokenStore.set(data.accessToken);
-      user.value = data.user;
-      isAuthenticated.value = true;
+      // isAuthenticated.value = true;
     } catch {
       clearSession();
     } finally {
@@ -40,21 +51,7 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
-  const loginWithCredentials = async (email: string, password: string) => {
-    try {
-      const { data } = await authInitApi.post("/login", {
-        email,
-        password,
-      });
-      tokenStore.set(data.accessToken);
-      user.value = data.user;
-      isAuthenticated.value = true;
-      showAuthModal.value = false;
-    } catch (error: any) {
-      const message = error.response?.data?.message || "Login failed";
-      throw new Error(message);
-    }
-  };
+  
 
   const exchangeOAuthCode = async (code: any, state: any, provider: any) => {
     const storedState = sessionStorage.getItem("oauth_state");
@@ -104,9 +101,8 @@ export const useAuthStore = defineStore("auth", () => {
     fullName,
     avatar,
 
-    fetchUser,
-    bootstrap,
-    loginWithCredentials,
+    initializeAuth,
+    refreshToken,
     exchangeOAuthCode,
     logout,
     clearSession,

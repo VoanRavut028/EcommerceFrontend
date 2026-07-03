@@ -6,8 +6,7 @@ import type {
   InternalAxiosRequestConfig,
   AxiosError,
 } from "axios";
-import authInitApi from "@/services/authInit.ts";
-
+import { useAuthStore } from "@/stores/auth.ts";
 interface QueuedRequest {
   resolve: (token: string) => void;
   reject: (error: unknown) => void;
@@ -23,8 +22,12 @@ const api: AxiosInstance = axios.create({
 });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const authStore = useAuthStore();
   const token = tokenStore.get();
-  if (token && config.headers) {
+
+  console.log(`Token is the intercepter : ${token}`);
+  if (token) {
+    authStore.isAuthenticated = true;
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -33,15 +36,11 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 let isRefreshing = false;
 let refreshQueue: QueuedRequest[] = [];
 
-interface RefreshResponse {
-  accessToken: string;
-}
-
 api.interceptors.response.use(
   (res) => res,
   async (err: AxiosError) => {
     const original = err.config as CustomAxiosRequestConfig;
-
+    const authStore = useAuthStore();
     if (err.response?.status !== 401 || !original || original._retry) {
       return Promise.reject(err);
     }
@@ -61,17 +60,7 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const { data } = await authInitApi.post<RefreshResponse>("/refresh");
-      const newToken = data.accessToken;
-
-      tokenStore.set(newToken);
-
-      refreshQueue.forEach(({ resolve }) => resolve(newToken));
-      refreshQueue = [];
-
-      if (original.headers) {
-        original.headers.Authorization = `Bearer ${newToken}`;
-      }
+      await authStore.refreshToken();
       return api(original);
     } catch (refreshErr) {
       refreshQueue.forEach(({ reject }) => reject(refreshErr));

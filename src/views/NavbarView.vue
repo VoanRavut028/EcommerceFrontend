@@ -1,52 +1,56 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { ref } from "vue";
+import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
 import BaseModal from "@/components/BaseModal.vue";
 import LoginView from "./LoginView.vue";
 import RegisterView from "./RegisterView.vue";
 import { useAuthStore } from "@/stores/auth.ts";
 import LogoutView from "./LogoutView.vue";
+import { useI18n } from "vue-i18n";
+import { useLocaleStore } from "@/stores/locale.ts";
+const { t } = useI18n();
 const authStore = useAuthStore();
-const openModal = computed({
-  get: () => authStore.showAuthModal,
-  set: (value) => {
-    authStore.showAuthModal = value;
-  },
-});
-const openRegisterModal = computed({
-  get: () => authStore.showAuthModal && authStore.showAuthModal,
-  set: (value) => {
-    authStore.showAuthModal = value;
-  },
-});
+const localeStore = useLocaleStore();
+
 const isMobileMenuOpen = ref(false);
 const showProducts = ref(false);
 const showLogoutModal = ref(false);
-
-const onLogoutSuccess = () => {
-  showLogoutModal.value = false;
+const openModal = ref(false);
+const openRegisterModal = ref(false);
+const isShowMenuLang = ref(false);
+const openLoginModal = () => {
+  openModal.value = true;
+  openRegisterModal.value = false;
 };
-const isAuthenticated = computed(() => authStore.isAuthenticated);
-const userName = computed(
-  () => authStore.user?.first_name || authStore.user?.name || "User",
-);
+
+const closeLoginModal = () => {
+  openModal.value = false;
+};
+
+const openRegisterModalOnly = () => {
+  openRegisterModal.value = true;
+  openModal.value = false;
+};
+
+const closeRegisterModal = () => {
+  openRegisterModal.value = false;
+};
+
+// const isAuthenticated = computed(() => authStore.isAuthenticated);
 
 const toggleProducts = () => {
   showProducts.value = !showProducts.value;
 };
-
+const toggleMenuLang = () => {
+  isShowMenuLang.value = !isShowMenuLang.value;
+};
 const handleLogout = async () => {
   await authStore.logout();
 };
-
-onMounted(() => {
-  authStore.bootstrap();
-});
 </script>
 <template>
   <div>
-    <nav
-      class="w-full bg-white border-b border-gray-100 font-sans tracking-tight py-2"
-    >
+    <nav class="w-full bg-white border-b border-gray-100 py-2">
       <!-- Mobile Hamburger -->
       <button
         @click="isMobileMenuOpen = true"
@@ -69,20 +73,18 @@ onMounted(() => {
       </button>
       <div class="mx-auto flex items-center justify-between">
         <!-- Left Menu -->
-        <div
-          class="hidden lg:flex items-center gap-8 text-[13px] font-bold text-gray-800"
-        >
-          <ul class="flex items-center text-[1rem]">
+        <div class="hidden lg:flex items-center gap-8 text-gray-800">
+          <ul class="flex items-center">
             <!-- Products Dropdown -->
-            <li class="relative group cursor-pointer">
-              <button
-                class="flex items-center gap-2 uppercase transition-all duration-300"
+            <li class="relative group">
+              <span
+                class="flex items-center hover:cursor-pointer gap-2 uppercase transition-all duration-300"
               >
-                Products
+                {{ t("nav.products") }}
                 <span
                   class="w-1.5 h-1.5 border-r-2 border-b-2 border-black transform rotate-45 transition-transform duration-300 translate-y-[-2px] group-hover:rotate-[225deg] group-hover:translate-y-[1px]"
                 ></span>
-              </button>
+              </span>
 
               <div
                 class="absolute left-0 pt-4 w-60 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-50"
@@ -92,31 +94,31 @@ onMounted(() => {
                 >
                   <RouterLink to="/">
                     <a
-                      class="block px-6 py-3 text-[10px] tracking-widest uppercase text-gray-950 hover:text-black hover:bg-gray-50 transition-colors"
+                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 hover:text-black hover:bg-gray-50 hover:underline hover:text-[17px] transition-colors"
                     >
-                      Kitchen
+                      {{ t("nav.kitchen") }}
                     </a>
                   </RouterLink>
                   <RouterLink to="/products/fashion">
                     <a
-                      class="block px-6 py-3 text-[10px] tracking-widest uppercase text-gray-950 hover:text-black hover:bg-gray-50 transition-colors"
+                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 hover:text-black hover:underline hover:text-[17px] hover:bg-gray-50 transition-colors"
                     >
-                      FASHION
+                      {{ t("nav.fashion").toUpperCase() }}
                     </a>
                   </RouterLink>
                   <RouterLink to="/products/Electronics">
                     <a
-                      class="block px-6 py-3 text-[10px] tracking-widest uppercase text-gray-950 hover:text-black hover:bg-gray-50 transition-colors"
+                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 hover:text-black hover:underline hover:text-[17px] hover:bg-gray-50 transition-colors"
                     >
-                      ELECTRONICS
+                      {{ t("nav.electronics").toUpperCase() }}
                     </a>
                   </RouterLink>
                   <div class="mx-6 border-t border-gray-50 my-1"></div>
                   <RouterLink to="/products/all">
                     <a
-                      class="block px-6 py-3 text-[10px] tracking-widest uppercase text-gray-950 hover:text-black hover:bg-gray-50 transition-colors"
+                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 hover:text-black hover:underline hover:text-[17px] hover:bg-gray-50 transition-colors"
                     >
-                      Shop All
+                      {{ t("nav.shopAll") }}
                     </a>
                   </RouterLink>
                 </div>
@@ -126,17 +128,17 @@ onMounted(() => {
             <li
               class="hover:bg-gray-100 px-5 py-3 transition-colors cursor-pointer rounded"
             >
-              MEN
+              {{ t("nav.men").toUpperCase() }}
             </li>
             <li
               class="hover:bg-gray-100 px-5 py-3 transition-colors cursor-pointer rounded"
             >
-              BOYS
+              {{ t("nav.boys").toUpperCase() }}
             </li>
             <li
               class="hover:bg-gray-100 px-5 py-3 transition-colors cursor-pointer rounded"
             >
-              GIRLS
+              {{ t("nav.girls").toUpperCase() }}
             </li>
           </ul>
         </div>
@@ -170,14 +172,16 @@ onMounted(() => {
             </span>
             <input
               type="text"
-              placeholder="Search"
+              :placeholder="t('nav.search')"
               class="pl-10 pr-4 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 w-48"
             />
           </div>
 
           <!-- Icons -->
-          <div class="flex items-center gap-4 text-gray-700">
-            <button class="hover:text-black transition-colors">
+          <div class="flex items-center gap-3 text-gray-700">
+            <span
+              class="hover:text-black transition-colors hover:cursor-pointer"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -192,7 +196,7 @@ onMounted(() => {
                   d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
                 />
               </svg>
-            </button>
+            </span>
 
             <button
               class="hover:text-black cursor-pointer transition-colors"
@@ -233,67 +237,125 @@ onMounted(() => {
                 />
               </svg>
               <span
-                class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center"
+                class="absolute -top-1 -right-1 bg-red-600 text-white text-[16px] font-bold px-1.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center"
               >
                 0
               </span>
             </button>
+
+            <ul class="flex items-center">
+              <!-- Products Dropdown -->
+              <li class="relative group">
+                <span
+                  class="flex items-center text-[16px] gap-2 uppercase transition-all duration-300"
+                >
+                  {{ t("nav.language") }}
+                  <span
+                    class="w-1.5 h-1.5 border-r-2 border-b-2 border-black transform rotate-45 transition-transform duration-300 translate-y-[-2px] group-hover:rotate-[225deg] group-hover:translate-y-[1px]"
+                  ></span>
+                </span>
+
+                <div
+                  class="absolute left-0 pt-4 w-60 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-50"
+                >
+                  <div
+                    class="bg-white border border-gray-100 shadow-xl py-2 rounded-md"
+                  >
+                    <a
+                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 transition-colors"
+                    >
+                      <span
+                        class="hover:cursor-pointer hover:text-[17px] hover:underline"
+                        @click="localeStore.switchLanguage('en')"
+                      >
+                        {{ t("nav.en") }}
+                      </span>
+                    </a>
+                    <a
+                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 transition-colors"
+                    >
+                      <span
+                        class="hover:cursor-pointer hover:text-[17px] hover:underline"
+                        @click="localeStore.switchLanguage('kh')"
+                      >
+                        {{ t("nav.kh") }}
+                      </span>
+                    </a>
+                  </div>
+                </div>
+              </li>
+            </ul>
           </div>
 
           <!-- Auth Buttons -->
           <div
-            v-if="!isAuthenticated"
-            class="flex items-center gap-3 text-[13px] font-bold text-gray-800"
+            v-if="!authStore.isAuthenticated"
+            class="flex items-center gap-3 text-[16px] font-bold text-gray-800"
           >
             <button
-              @click="authStore.showAuthModal = true"
-              class="bg-[#e8def8] text-[#21005d] rounded-full px-6 py-2.5 text-sm font-medium tracking-wide hover:bg-[#d8cef0] transition-colors"
+              @click="openLoginModal()"
+              class="bg-slat-purple text-[#21005d] rounded-full px-6 py-2.5 text-sm hover:bg-[#d8cef0] transition-colors"
             >
-              SIGN IN
+              {{ t("nav.signIn").toUpperCase() }}
             </button>
             <button
-              @click="authStore.showAuthModal = true"
-              class="bg-[#6750a4] text-white rounded-full px-6 py-2.5 text-sm font-medium tracking-wide hover:bg-[#5b4397] transition-colors"
+              @click="openRegisterModalOnly()"
+              class="bg-bold-purple text-white rounded-full px-6 py-2.5 text-sm hover:bg-[#5b4397] transition-colors"
             >
-              REGISTER
+              {{ t("nav.register").toUpperCase() }}
             </button>
           </div>
+          <!-- user info -->
+          <!-- In your Navbar -->
+          <div v-else class="flex items-center gap-3 text-sm text-gray-700">
+            <button
+              @click="showLogoutModal = true"
+              class="flex items-center gap-2.5 hover:text-black transition-colors cursor-pointer group"
+            >
+              <!-- Avatar -->
+              <div
+                class="w-8 h-8 rounded-full overflow-hidden border border-gray-200"
+              >
+                <img
+                  v-if="authStore.user?.avatar_url"
+                  :src="authStore.user.avatar_url"
+                  alt="Avatar"
+                  class="w-full h-full object-cover"
+                />
+                <div
+                  v-else
+                  class="w-full h-full bg-gray-100 flex items-center justify-center text-gray-500 text-xl"
+                >
+                  👤
+                </div>
+              </div>
 
-          <div
-            v-else
-            class="flex items-center gap-3 text-sm font-medium text-gray-700"
-          >
-            <!-- <RouterLink to="/dashboard" class="hover:text-black">
-              Dashboard
-            </RouterLink> -->
-            <button class="cursor-pointer">
-              <LogoutView></LogoutView>
-              <span class="flex text-[16px]"
-                ><svg
+              <!-- Name -->
+              <span class="flex items-center gap-1 text-[16px]">
+                {{ authStore.fullName?.firstName || "" }}
+                {{ authStore.fullName?.lastName || "" }}
+                <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
-                  stroke-width="1.5"
+                  stroke-width="2.5"
                   stroke="currentColor"
-                  class="size-6"
+                  class="size-4 opacity-70 group-hover:opacity-100"
                 >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
-                    d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                    d="M19 9l-7 7-7-7"
                   />
                 </svg>
-                {{ authStore.fullName.firstName }}
-                {{ authStore.fullName.lastName }}</span
-              >
+              </span>
             </button>
-            <!-- <button
-              @click="handleLogout"
-              class="text-red-600 hover:text-red-700"
-            >
-              Logout
-            </button> -->
           </div>
+
+          <!-- Logout Modal using your BaseModal -->
+          <BaseModal :open="showLogoutModal" @close="showLogoutModal = false">
+            <LogoutModal @close="showLogoutModal = false" />
+          </BaseModal>
         </div>
       </div>
 
@@ -323,7 +385,7 @@ onMounted(() => {
             </div>
 
             <!-- Menu Items -->
-            <div class="flex flex-col space-y-6 text-[15px] font-medium">
+            <div class="flex flex-col space-y-6 text-[15px]">
               <div>
                 <button
                   @click="toggleProducts"
@@ -385,19 +447,19 @@ onMounted(() => {
             <div v-if="!authStore.isAuthenticated" class="mt-10 space-y-4">
               <button
                 @click="
-                  authStore.showAuthModal = true;
+                  openLoginModal();
                   isMobileMenuOpen = false;
                 "
-                class="w-full bg-[#e8def8] text-[#21005d] rounded-full py-3.5 text-sm font-medium"
+                class="w-full bg-[#e8def8] text-[#21005d] rounded-full py-3.5 text-sm"
               >
                 SIGN IN
               </button>
               <button
                 @click="
-                  authStore.showAuthModal = true;
+                  openRegisterModalOnly();
                   isMobileMenuOpen = false;
                 "
-                class="w-full bg-[#6750a4] text-white rounded-full py-3.5 text-sm font-medium"
+                class="w-full bg-[#6750a4] text-white rounded-full py-3.5 text-sm"
               >
                 REGISTER
               </button>
@@ -405,19 +467,14 @@ onMounted(() => {
 
             <!-- hide login signup when auth = true -->
             <div v-else class="mt-6 space-y-3">
-              <RouterLink
-                to="/dashboard"
-                class="block text-sm font-medium text-slate-700"
-              >
+              <RouterLink to="/dashboard" class="block text-sm text-slate-700">
                 Dashboard
               </RouterLink>
               <span class="block text-sm text-slate-600"
-                >Hi, {{ userName }}</span
+                >{{ authStore.fullName?.firstName || "" }}
+                {{ authStore.fullName?.lastName || "" }}</span
               >
-              <button
-                @click="handleLogout"
-                class="text-sm font-medium text-red-600"
-              >
+              <button @click="handleLogout" class="text-sm text-red-600">
                 Logout
               </button>
             </div>
@@ -426,15 +483,20 @@ onMounted(() => {
       </div>
     </nav>
 
-    <BaseModal
-      :open="authStore.showAuthModal"
-      @close="authStore.showAuthModal = false"
-    >
+    <BaseModal :open="openModal" @close="closeLoginModal">
       <LoginView
-        v-if="authStore.showAuthModal"
-        @close="authStore.showAuthModal = false"
-        @close-register="authStore.showAuthModal = true"
+        v-if="openModal"
+        @close="closeLoginModal"
+        @close-register="openRegisterModalOnly()"
       ></LoginView>
+    </BaseModal>
+
+    <BaseModal :open="openRegisterModal" @close="closeRegisterModal">
+      <RegisterView
+        v-if="openRegisterModal"
+        @close="closeRegisterModal"
+        @close-login="openLoginModal()"
+      ></RegisterView>
     </BaseModal>
   </div>
 </template>

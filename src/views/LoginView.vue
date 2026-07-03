@@ -22,9 +22,9 @@
       </button>
       <!-- Header -->
       <div class="text-lg">
-        <h1 class="text-3xl font-bold text-slate-900 !pt-1">Welcome back</h1>
+        <h1 class="text-3xl font-bold text-slate-900 !pt-1">{{ t("auth.welcomeBackTitle") }}</h1>
         <p class="text-gray-500 !py-4">
-          Welcome back! Please enter your details.
+          {{ t("auth.welcomeBackSubtitle") }}
         </p>
       </div>
 
@@ -32,18 +32,18 @@
         v-if="registrationSuccess"
         class="mb-4 rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700"
       >
-        Registration successful! Please log in with your new account.
+        {{ t("auth.registrationSuccess") }}
       </div>
 
       <!-- Form -->
       <form class="space-y-5" @submit.prevent="handleLoginWithCredentail">
         <!-- Email -->
         <div class=" ">
-          <label class="block text-sm font-medium text-gray-700"> Email </label>
+          <label class="block text-sm font-medium text-gray-700"> {{ t("auth.email") }} </label>
           <input
             v-model="email"
             type="email"
-            placeholder="Enter your email"
+            :placeholder="t('auth.enterEmail')"
             class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
           />
           <p v-if="errors.email" class="text-sm text-red-500 mt-1">
@@ -54,13 +54,13 @@
         <!-- Password -->
         <div class=" ">
           <label class="block text-sm font-medium text-gray-700">
-            Password
+            {{ t("auth.password") }}
           </label>
 
           <input
             v-model="password"
             type="password"
-            placeholder="Password"
+            :placeholder="t('auth.enterPassword')"
             class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
           />
           <p v-if="errors.password" class="text-sm text-red-500 mt-1">
@@ -74,7 +74,7 @@
             type="button"
             class="text-sm font-semibold text-slate-900 hover:underline hover:cursor-pointer"
           >
-            Forgot password?
+            {{ t("auth.forgotPassword") }}
           </button>
         </div>
 
@@ -83,7 +83,28 @@
           type="submit"
           class="w-full h-10 rounded-xl bg-slate-950 text-white font-semibold hover:opacity-90 transition"
         >
-          Login
+          <svg
+            v-if="authStore.isLoading"
+            class="animate-spin h-5 w-5 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            ></path>
+          </svg>
+          <span>{{ authStore.isLoading ? t("auth.loggingIn") : t("auth.login") }}</span>
         </button>
       </form>
 
@@ -117,7 +138,7 @@
             />
           </svg>
 
-          <span>Sign in with Google</span>
+          <span>{{ t("auth.signInGoogle") }}</span>
         </button>
 
         <!-- GitHub -->
@@ -136,18 +157,18 @@
             />
           </svg>
 
-          <span>Sign in with GitHub</span>
+          <span>{{ t("auth.signInGitHub") }}</span>
         </button>
       </div>
 
       <!-- Footer -->
       <div class="!mt-5 text-center text-sm text-gray-500">
-        Don't have an account?
+        {{ t("auth.noAccount") }}
         <button
           @click="switchToRegister"
           class="font-semibold text-slate-900 hover:underline"
         >
-          Sign up for free
+          {{ t("auth.signUpFree") }}
         </button>
       </div>
     </div>
@@ -158,8 +179,9 @@ import { useAuth } from "@/composables/useAuth";
 import { validateLogin } from "@/composables/loginValidate";
 import { computed, ref, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
-
+import { useI18n } from "vue-i18n";
 const { loginWithProvider, logiCredentail, isLoading } = useAuth();
+const { t } = useI18n();
 const authStore = useAuthStore();
 const registrationSuccess = ref(false);
 
@@ -195,7 +217,6 @@ const emit = defineEmits<{
 }>();
 const handleClosePopup = () => {
   emit("close");
-  
 };
 
 const switchToRegister = () => {

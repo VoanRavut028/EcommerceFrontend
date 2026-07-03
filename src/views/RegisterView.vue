@@ -24,9 +24,11 @@
 
       <!-- Header -->
       <div class="text-lg">
-        <h1 class="text-3xl font-bold text-slate-900 !pt-1">Create account</h1>
+        <h1 class="text-3xl font-bold text-slate-900 !pt-1">
+          {{ t("auth.createAccountTitle") }}
+        </h1>
         <p class="text-gray-500 !py-4">
-          Sign up for free and get started today.
+          {{ t("auth.createAccountSubtitle") }}
         </p>
       </div>
 
@@ -44,13 +46,13 @@
           <!-- First Name -->
           <div class="!mt-1">
             <label class="block text-sm font-medium text-gray-700">
-              First name
+              {{ t("auth.firstName") }}
             </label>
             <input
               v-model="form.firstName"
               @blur="v$.firstName.$touch"
               type="text"
-              placeholder="Enter your first name"
+              :placeholder="t('auth.enterFirstName')"
               class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
             />
             <span
@@ -65,13 +67,13 @@
           <!-- Last Name -->
           <div class="!mt-1">
             <label class="block text-sm font-medium text-gray-700">
-              Last name
+              {{ t("auth.lastName") }}
             </label>
             <input
               v-model="form.lastName"
               @blur="v$.lastName.$touch"
               type="text"
-              placeholder="Enter your last name"
+              :placeholder="t('auth.enterLastName')"
               class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
             />
             <span
@@ -105,13 +107,13 @@
         <!-- Password -->
         <div class="!mt-4">
           <label class="block text-sm font-medium text-gray-700">
-            Password
+            {{ t("auth.password") }}
           </label>
           <input
             v-model="form.password"
             @blur="v$.password.$touch"
             type="password"
-            placeholder="Create a password"
+            :placeholder="t('auth.createPassword')"
             class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
           />
           <span
@@ -130,7 +132,7 @@
             :disabled="loading"
             class="w-full h-10 rounded-xl bg-slate-950 text-white font-semibold hover:opacity-90 transition disabled:opacity-50"
           >
-            {{ loading ? "Creating account..." : "Create account" }}
+            {{ loading ? t("auth.creatingAccount") : t("auth.createAccount") }}
           </button>
         </div>
       </form>
@@ -139,7 +141,7 @@
       <div class="!mt-5 !space-y-5">
         <!-- Google -->
         <button
-        target="_blank"
+          target="_blank"
           @click="loginWithProvider('google')"
           class="w-full cursor-pointer h-10 border border-gray-300 rounded-xl flex items-center justify-center gap-3 font-medium text-gray-700 hover:bg-gray-50 transition"
         >
@@ -165,7 +167,7 @@
               d="M43.6 20.5H42V20H24v8h11.3c-.8 2.4-2.4 4.4-4.7 5.8l6.2 5.2C40.6 35.5 44 30.2 44 24c0-1.3-.1-2.4-.4-3.5z"
             />
           </svg>
-          <span>Sign up with Google</span>
+          <span>{{ t("auth.signUpGoogle") }}</span>
         </button>
 
         <!-- GitHub -->
@@ -183,18 +185,18 @@
               d="M12 2C6.48 2 2 6.58 2 12.22c0 4.51 2.87 8.33 6.84 9.68.5.1.66-.22.66-.49 0-.24-.01-1.04-.01-1.89-2.78.62-3.37-1.21-3.37-1.21-.46-1.18-1.11-1.5-1.11-1.5-.91-.63.07-.62.07-.62 1 .07 1.54 1.05 1.54 1.05.9 1.57 2.36 1.12 2.94.86.09-.67.35-1.12.63-1.38-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 5 0c1.9-1.32 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.94-2.33 4.8-4.56 5.06.36.32.68.95.68 1.92 0 1.39-.01 2.5-.01 2.84 0 .27.18.6.67.49A10.25 10.25 0 0 0 22 12.22C22 6.58 17.52 2 12 2z"
             />
           </svg>
-          <span>Sign up with GitHub</span>
+          <span>{{ t("auth.signUpGitHub") }}</span>
         </button>
       </div>
 
       <!-- Footer -->
       <div class="!mt-5 text-center text-sm text-gray-500">
-        Already have an account?
+        {{ t("auth.alreadyHaveAccount") }}
         <button
           @click="switchToLogin"
           class="font-semibold text-slate-900 hover:underline"
         >
-          Sign in
+          {{ t("auth.signInLink") }}
         </button>
       </div>
     </div>
@@ -207,8 +209,10 @@ import { required, email, minLength, helpers } from "@vuelidate/validators";
 import api from "@/lib/axios.ts";
 import { useAuth } from "@/composables/useAuth";
 import { useAuthStore } from "@/stores/auth";
+import { useI18n } from "vue-i18n";
 
 const { loginWithProvider, isLoading } = useAuth();
+const { t } = useI18n();
 const authStore = useAuthStore();
 
 interface RegisterForm {
@@ -283,10 +287,10 @@ async function handleSubmit(): Promise<void> {
   }
 }
 
-const emit = defineEmits(["close", "open-login"]);
+const emit = defineEmits(["close", "close-login"]);
 const handleClosePopup = () => emit("close");
 const switchToLogin = () => {
   emit("close");
-  emit("open-login");
+  emit("close-login");
 };
 </script>

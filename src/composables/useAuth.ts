@@ -1,15 +1,20 @@
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
+import authInitApi from "@/services/authInit";
+import { tokenStore } from "@/lib/tokenStore";
+
 interface OAuthConfig {
   url: string;
   params: Record<string, string>;
 }
+
 export type OAuthProvider = "google" | "github";
+
 export function useAuth() {
   const authStore = useAuthStore();
   const router = useRouter();
 
-  function loginWithProvider(provider: "google" | "github") {
+  function loginWithProvider(provider: OAuthProvider) {
     window.open(
       `${import.meta.env.VITE_API_URL}/auth/${provider}`,
       "_blank",
@@ -17,12 +22,22 @@ export function useAuth() {
     );
   }
 
-  async function logiCredentail(
-    email: String,
-    password: String,
+  async function loginWithCredentials(
+    email: string,
+    password: string,
   ): Promise<void> {
     try {
-      await authStore.loginWithCredentials(email, password);
+      authStore.isLoading = true;
+      const { data } = await authInitApi.post("/login", {
+        email,
+        password,
+      });
+
+      tokenStore.set(data.accessToken);
+      authStore.user = data.user;
+      authStore.isAuthenticated = true;
+      authStore.showAuthModal = false;
+
       console.log("All accessible browser cookies:", document.cookie);
       const queryRedirect = router.currentRoute.value.query.redirect;
       let safeRedirect = "/dashboard";
@@ -33,7 +48,10 @@ export function useAuth() {
 
       await router.push(safeRedirect);
     } catch (error: any) {
-      throw error;
+      const message = error.response?.data?.message || "Login failed";
+      throw new Error(message);
+    } finally {
+      authStore.isLoading = false;
     }
   }
 
@@ -44,7 +62,7 @@ export function useAuth() {
 
   return {
     loginWithProvider,
-    logiCredentail,
+    loginWithCredentials,
     logout,
     user: authStore.user,
     isAuthenticated: authStore.isAuthenticated,

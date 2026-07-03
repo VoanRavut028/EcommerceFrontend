@@ -1,116 +1,81 @@
+<!-- src/components/LogoutModal.vue -->
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useAuthStore } from '@/stores/auth'  
+
+const authStore = useAuthStore()
+const emit = defineEmits(['close'])
+
+const loading = ref(false)
+
+const handleLogout = async () => {
+  loading.value = true
+  try {
+    await authStore.logout()        
+    emit('close')
+  } catch (error) {
+    console.error(error)
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-[#3F2A1D] p-4">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-      <!-- Top right close button -->
-      <div class="flex justify-end p-4">
-        <button
-          @click="emitClose"
-          class="text-gray-400 hover:text-gray-600 text-2xl leading-none transition-colors"
-        >
-          ✕
-        </button>
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-auto overflow-hidden">
+    <!-- Header -->
+    <div class="flex justify-between items-center px-6 py-5 border-b">
+      <h2 class="text-xl font-semibold text-gray-900">Log out</h2>
+      <button
+        @click="emit('close')"
+        class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-8 text-center">
+      <div class="mx-auto w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mb-6">
+        <span class="text-5xl">👋</span>
       </div>
 
-      <div class="px-8 pb-10">
-        <!-- Header -->
-        <h1 class="text-3xl font-semibold text-gray-900 text-center mb-1">
-          Welcome back, {{ user?.first_name }}!
-        </h1>
-        <p class="text-gray-600 text-center mb-8">
-          Are you sure you want to log out?
-        </p>
+      <h3 class="text-xl font-medium text-gray-900 mb-2">
+        Are you sure you want to log out?
+      </h3>
 
-        <!-- User Info Card -->
-        <div class="bg-gray-50 rounded-2xl p-6 mb-8 flex items-center gap-4">
-          <!-- Avatar -->
-          <div class="flex-shrink-0">
-            <img
-              v-if="user?.avatar_url"
-              :src="user.avatar_url"
-              alt="Profile"
-              class="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm"
-            />
-            <div
-              v-else
-              class="w-16 h-16 bg-gray-200 rounded-2xl flex items-center justify-center text-4xl"
-            >
-              👤
-            </div>
-          </div>
-
-          <!-- User Details -->
-          <div class="flex-1 min-w-0">
-            <p class="font-semibold text-xl text-gray-900 truncate">
-              {{ user?.first_name }} {{ user?.last_name }}
-            </p>
-            <p class="text-gray-500 text-sm truncate">{{ user?.email }}</p>
-            <p v-if="user?.createdAt" class="text-xs text-gray-400 mt-1">
-              Member since {{ formatYear(user.createdAt) }}
-            </p>
-          </div>
+      <!-- User Info -->
+      <div class="inline-flex items-center gap-3 bg-gray-50 rounded-xl px-5 py-3 mb-8">
+        <img
+          v-if="authStore.user?.avatar_url"
+          :src="authStore.user.avatar_url"
+          class="w-10 h-10 rounded-full object-cover"
+        />
+        <div v-else class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-xl">
+          👤
         </div>
-
-        <!-- Logout Button -->
-        <button
-          @click="handleLogout"
-          :disabled="loading"
-          class="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 transition-colors text-white font-medium py-4 px-6 rounded-2xl text-lg flex items-center justify-center gap-2 shadow-sm"
-        >
-          <span v-if="loading" class="animate-spin inline-block w-5 h-5"
-            >⟳</span
-          >
-          Log out
-        </button>
-
-        <!-- Cancel -->
-        <button
-          @click="emitCancel"
-          class="w-full mt-3 bg-white border border-gray-300 hover:bg-gray-50 transition-colors text-gray-700 font-medium py-4 px-6 rounded-2xl"
-        >
-          Cancel
-        </button>
-
-        <p class="text-center text-xs text-gray-400 mt-8">
-          You will need to sign in again to access your account
-        </p>
+        <div class="text-left">
+          <p class="font-medium text-gray-900">
+            {{ authStore.fullName?.firstName }} {{ authStore.fullName?.lastName }}
+          </p>
+          <p class="text-sm text-gray-500">{{ authStore.user?.email }}</p>
+        </div>
       </div>
+
+      <button
+        @click="handleLogout"
+        :disabled="loading"
+        class="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 transition-colors text-white font-medium py-3.5 rounded-2xl text-lg mb-3"
+      >
+        {{ loading ? 'Logging out...' : 'Yes, Log out' }}
+      </button>
+
+      <button
+        @click="emit('close')"
+        class="w-full text-gray-600 hover:text-gray-800 font-medium py-3"
+      >
+        Cancel
+      </button>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed, ref } from "vue";
-import { useAuthStore } from "@/stores/auth";
-
-const authStore = useAuthStore();
-
-const user = computed(() => authStore.user);
-
-const loading = ref(false);
-
-const handleLogout = async () => {
-  loading.value = true;
-
-  try {
-    await authStore.logout();
-  } catch (error) {
-    console.error("Logout failed:", error);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const emitCancel = () => {
-  // You can emit or use router.go(-1)
-  // emit('cancel')
-};
-
-const emitClose = () => {
-  // emit('close')
-};
-
-// Helper
-const formatYear = (date: string | Date) => {
-  return new Date(date).getFullYear();
-};
-</script>
