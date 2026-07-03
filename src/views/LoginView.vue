@@ -22,7 +22,9 @@
       </button>
       <!-- Header -->
       <div class="text-lg">
-        <h1 class="text-3xl font-bold text-slate-900 !pt-1">{{ t("auth.welcomeBackTitle") }}</h1>
+        <h1 class="text-3xl font-bold text-slate-900 !pt-1">
+          {{ t("auth.welcomeBackTitle") }}
+        </h1>
         <p class="text-gray-500 !py-4">
           {{ t("auth.welcomeBackSubtitle") }}
         </p>
@@ -39,7 +41,9 @@
       <form class="space-y-5" @submit.prevent="handleLoginWithCredentail">
         <!-- Email -->
         <div class=" ">
-          <label class="block text-sm font-medium text-gray-700"> {{ t("auth.email") }} </label>
+          <label class="block text-sm font-medium text-gray-700">
+            {{ t("auth.email") }}
+          </label>
           <input
             v-model="email"
             type="email"
@@ -84,7 +88,7 @@
           class="w-full h-10 rounded-xl bg-slate-950 text-white font-semibold hover:opacity-90 transition"
         >
           <svg
-            v-if="authStore.isLoading"
+            v-if="isLoading"
             class="animate-spin h-5 w-5 text-white"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -104,7 +108,7 @@
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
             ></path>
           </svg>
-          <span>{{ authStore.isLoading ? t("auth.loggingIn") : t("auth.login") }}</span>
+          <span>{{ isLoading ? t("auth.loggingIn") : t("auth.login") }}</span>
         </button>
       </form>
 
@@ -180,7 +184,7 @@ import { validateLogin } from "@/composables/loginValidate";
 import { computed, ref, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useI18n } from "vue-i18n";
-const { loginWithProvider, logiCredentail, isLoading } = useAuth();
+const { loginWithProvider, loginWithCredentials, isLoading } = useAuth();
 const { t } = useI18n();
 const authStore = useAuthStore();
 const registrationSuccess = ref(false);
@@ -205,9 +209,11 @@ const handleLoginWithCredentail = async () => {
   if (!result.valid) return;
 
   try {
-    await logiCredentail(email.value, password.value);
+    await loginWithCredentials(email.value, password.value);
   } catch (err: any) {
     throw new Error(err);
+  } finally {
+    console.log(`Loading state ${isLoading}`);
   }
 };
 

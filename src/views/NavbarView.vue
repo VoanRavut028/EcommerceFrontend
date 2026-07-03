@@ -1,23 +1,19 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
+import { ref, nextTick } from "vue";
 import BaseModal from "@/components/BaseModal.vue";
 import LoginView from "./LoginView.vue";
 import RegisterView from "./RegisterView.vue";
+import MobileNav from "@/components/MobileNav.vue";
 import { useAuthStore } from "@/stores/auth.ts";
 import LogoutView from "./LogoutView.vue";
 import { useI18n } from "vue-i18n";
-import { useLocaleStore } from "@/stores/locale.ts";
+import LangDropdown from "@/components/LangDropdown.vue";
 const { t } = useI18n();
 const authStore = useAuthStore();
-const localeStore = useLocaleStore();
 
-const isMobileMenuOpen = ref(false);
-const showProducts = ref(false);
 const showLogoutModal = ref(false);
 const openModal = ref(false);
 const openRegisterModal = ref(false);
-const isShowMenuLang = ref(false);
 const openLoginModal = () => {
   openModal.value = true;
   openRegisterModal.value = false;
@@ -38,42 +34,49 @@ const closeRegisterModal = () => {
 
 // const isAuthenticated = computed(() => authStore.isAuthenticated);
 
-const toggleProducts = () => {
-  showProducts.value = !showProducts.value;
-};
-const toggleMenuLang = () => {
-  isShowMenuLang.value = !isShowMenuLang.value;
-};
 const handleLogout = async () => {
   await authStore.logout();
 };
+
+const query = ref("");
+const isSearchOpen = ref(false);
+const searchInput = ref<HTMLInputElement | null>(null);
+
+const emit = defineEmits(["search", "clear"]);
+
+async function openSearch() {
+  isSearchOpen.value = true;
+  await nextTick();
+  searchInput.value?.focus();
+}
+
+function closeSearch() {
+  isSearchOpen.value = false;
+}
+
+function onSearch() {
+  emit("search", query.value);
+  closeSearch();
+}
+
+function onClear() {
+  query.value = "";
+  emit("clear");
+}
 </script>
 <template>
   <div>
-    <nav class="w-full bg-white border-b border-gray-100 py-2">
-      <!-- Mobile Hamburger -->
-      <button
-        @click="isMobileMenuOpen = true"
-        class="lg:hidden text-gray-800 focus:outline-none"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="2"
-          stroke="currentColor"
-          class="w-7 h-7"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+    <nav class="container bg-white">
+      <div class="flex justify-between items-center">
+        <div class="lg:hidden shrink-0">
+          <MobileNav
+            @open-login="openLoginModal"
+            @open-register="openRegisterModalOnly"
+            @logout="handleLogout"
           />
-        </svg>
-      </button>
-      <div class="mx-auto flex items-center justify-between">
+        </div>
         <!-- Left Menu -->
-        <div class="hidden lg:flex items-center gap-8 text-gray-800">
+        <div class="hidden lg:flex lg:items-center text-black font-bold">
           <ul class="flex items-center">
             <!-- Products Dropdown -->
             <li class="relative group">
@@ -144,24 +147,107 @@ const handleLogout = async () => {
         </div>
 
         <!-- Logo -->
-        <div>
-          <span class="text-3xl font-[900] tracking-tighter text-black"
-            >VUT SHOP</span
+        <div class="justify-self-center">
+          <p
+            class="text-[20px] hidden lg:flex lg:text-4xl sm:text-2xl font-[900] tracking-tighter text-black"
           >
+            VUT SHOP
+          </p>
         </div>
-
         <!-- Right Side -->
-        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-6 not-odd: justify-self-end">
           <!-- Search -->
-          <div class="relative flex items-center">
-            <span class="absolute left-3 text-gray-400">
+
+          <!-- Full search bar overlay, opens on click -->
+          <Transition name="fade">
+            <div
+              v-if="isSearchOpen"
+              class="fixed inset-0 z-50 bg-black/30"
+              @click.self="closeSearch"
+            >
+              <div class="w-full bg-white shadow-md">
+                <!-- Top dark strip -->
+                <div class="h-2 bg-slate-800 w-full"></div>
+
+                <!-- Search bar -->
+                <div class="px-6 py-4">
+                  <div
+                    class="relative flex items-center border-b border-gray-300 pb-3"
+                  >
+                    <input
+                      ref="searchInput"
+                      v-model="query"
+                      type="text"
+                      placeholder="What are you searching for?"
+                      class="w-full pr-16 text-base text-gray-700 placeholder-gray-500 outline-none bg-transparent"
+                      @keyup.enter="onSearch"
+                      @keyup.esc="closeSearch"
+                    />
+
+                    <div class="absolute right-0 flex items-center gap-4">
+                      <!-- Search icon -->
+                      <button
+                        type="button"
+                        class="text-gray-800 hover:text-gray-500 transition-colors"
+                        aria-label="Search"
+                        @click="onSearch"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-5 w-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <circle cx="11" cy="11" r="7" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                      </button>
+
+                      <!-- Close icon -->
+                      <button
+                        type="button"
+                        class="text-gray-800 hover:text-gray-500 transition-colors"
+                        aria-label="Close search"
+                        @click="closeSearch"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-5 w-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Transition>
+          <!-- Icons -->
+          <div class="flex items-center gap-3 text-gray-700">
+            <button
+              type="button"
+              @click="openSearch"
+              class="hover:text-black transition-colors hover:cursor-pointer p-2 rounded-full"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke-width="2"
                 stroke="currentColor"
-                class="w-4 h-4"
+                class="w-6 h-6"
               >
                 <path
                   stroke-linecap="round"
@@ -169,17 +255,9 @@ const handleLogout = async () => {
                   d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
                 />
               </svg>
-            </span>
-            <input
-              type="text"
-              :placeholder="t('nav.search')"
-              class="pl-10 pr-4 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 w-48"
-            />
-          </div>
+            </button>
 
-          <!-- Icons -->
-          <div class="flex items-center gap-3 text-gray-700">
-            <span
+            <button
               class="hover:text-black transition-colors hover:cursor-pointer"
             >
               <svg
@@ -196,7 +274,7 @@ const handleLogout = async () => {
                   d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
                 />
               </svg>
-            </span>
+            </button>
 
             <button
               class="hover:text-black cursor-pointer transition-colors"
@@ -243,71 +321,27 @@ const handleLogout = async () => {
               </span>
             </button>
 
-            <ul class="flex items-center">
-              <!-- Products Dropdown -->
-              <li class="relative group">
-                <span
-                  class="flex items-center text-[16px] gap-2 uppercase transition-all duration-300"
-                >
-                  {{ t("nav.language") }}
-                  <span
-                    class="w-1.5 h-1.5 border-r-2 border-b-2 border-black transform rotate-45 transition-transform duration-300 translate-y-[-2px] group-hover:rotate-[225deg] group-hover:translate-y-[1px]"
-                  ></span>
-                </span>
-
-                <div
-                  class="absolute left-0 pt-4 w-60 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-50"
-                >
-                  <div
-                    class="bg-white border border-gray-100 shadow-xl py-2 rounded-md"
-                  >
-                    <a
-                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 transition-colors"
-                    >
-                      <span
-                        class="hover:cursor-pointer hover:text-[17px] hover:underline"
-                        @click="localeStore.switchLanguage('en')"
-                      >
-                        {{ t("nav.en") }}
-                      </span>
-                    </a>
-                    <a
-                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 transition-colors"
-                    >
-                      <span
-                        class="hover:cursor-pointer hover:text-[17px] hover:underline"
-                        @click="localeStore.switchLanguage('kh')"
-                      >
-                        {{ t("nav.kh") }}
-                      </span>
-                    </a>
-                  </div>
-                </div>
-              </li>
-            </ul>
+            <LangDropdown />
           </div>
 
           <!-- Auth Buttons -->
           <div
             v-if="!authStore.isAuthenticated"
-            class="flex items-center gap-3 text-[16px] font-bold text-gray-800"
+            class="hidden lg:flex items-center gap-3 text-[16px] font-bold text-gray-800"
           >
-            <button
-              @click="openLoginModal()"
-              class="bg-slat-purple text-[#21005d] rounded-full px-6 py-2.5 text-sm hover:bg-[#d8cef0] transition-colors"
-            >
+            <button @click="openLoginModal()" class="btn-gost">
               {{ t("nav.signIn").toUpperCase() }}
             </button>
-            <button
-              @click="openRegisterModalOnly()"
-              class="bg-bold-purple text-white rounded-full px-6 py-2.5 text-sm hover:bg-[#5b4397] transition-colors"
-            >
+            <button @click="openRegisterModalOnly()" class="btn-gray">
               {{ t("nav.register").toUpperCase() }}
             </button>
           </div>
           <!-- user info -->
           <!-- In your Navbar -->
-          <div v-else class="flex items-center gap-3 text-sm text-gray-700">
+          <div
+            v-else
+            class="hidden lg:flex items-center gap-3 text-sm text-gray-700"
+          >
             <button
               @click="showLogoutModal = true"
               class="flex items-center gap-2.5 hover:text-black transition-colors cursor-pointer group"
@@ -326,7 +360,20 @@ const handleLogout = async () => {
                   v-else
                   class="w-full h-full bg-gray-100 flex items-center justify-center text-gray-500 text-xl"
                 >
-                  👤
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-6"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                    />
+                  </svg>
                 </div>
               </div>
 
@@ -358,129 +405,6 @@ const handleLogout = async () => {
           </BaseModal>
         </div>
       </div>
-
-      <!-- Mobile Sidebar -->
-      <div
-        v-if="isMobileMenuOpen"
-        class="fixed inset-0 bg-black/50 z-[2000] lg:hidden"
-        @click="isMobileMenuOpen = false"
-      >
-        <div
-          class="w-72 bg-white h-full shadow-2xl transform transition-transform duration-300"
-          :class="{
-            'translate-x-0': isMobileMenuOpen,
-            '-translate-x-full': !isMobileMenuOpen,
-          }"
-          @click.stop
-        >
-          <div class="p-6">
-            <!-- Sidebar Header -->
-            <div class="flex justify-between items-center mb-8">
-              <span class="text-3xl font-[900] tracking-tighter text-black"
-                >PVR SHOP</span
-              >
-              <button @click="isMobileMenuOpen = false" class="text-gray-500">
-                ✕
-              </button>
-            </div>
-
-            <!-- Menu Items -->
-            <div class="flex flex-col space-y-6 text-[15px]">
-              <div>
-                <button
-                  @click="toggleProducts"
-                  class="flex items-center justify-between w-full py-3 border-b"
-                >
-                  Products
-                  <span :class="{ 'rotate-180': showProducts }">▼</span>
-                </button>
-                <div v-if="showProducts" class="pl-4 mt-3 space-y-3 text-sm">
-                  <RouterLink
-                    to="/"
-                    class="block py-2"
-                    @click="isMobileMenuOpen = false"
-                    >Kitchen</RouterLink
-                  >
-                  <RouterLink
-                    to="/products/fashion"
-                    class="block py-2"
-                    @click="isMobileMenuOpen = false"
-                    >Fashion</RouterLink
-                  >
-                  <RouterLink
-                    to="/products/Electronics"
-                    class="block py-2"
-                    @click="isMobileMenuOpen = false"
-                    >Electronics</RouterLink
-                  >
-                  <RouterLink
-                    to="/products/all"
-                    class="block py-2"
-                    @click="isMobileMenuOpen = false"
-                    >Shop All</RouterLink
-                  >
-                </div>
-              </div>
-
-              <RouterLink
-                to="#"
-                class="py-3 border-b"
-                @click="isMobileMenuOpen = false"
-                >MEN</RouterLink
-              >
-              <RouterLink
-                to="#"
-                class="py-3 border-b"
-                @click="isMobileMenuOpen = false"
-                >BOYS</RouterLink
-              >
-              <RouterLink
-                to="#"
-                class="py-3 border-b"
-                @click="isMobileMenuOpen = false"
-                >GIRLS</RouterLink
-              >
-            </div>
-
-            <!-- Login Signup button when auth = false -->
-
-            <div v-if="!authStore.isAuthenticated" class="mt-10 space-y-4">
-              <button
-                @click="
-                  openLoginModal();
-                  isMobileMenuOpen = false;
-                "
-                class="w-full bg-[#e8def8] text-[#21005d] rounded-full py-3.5 text-sm"
-              >
-                SIGN IN
-              </button>
-              <button
-                @click="
-                  openRegisterModalOnly();
-                  isMobileMenuOpen = false;
-                "
-                class="w-full bg-[#6750a4] text-white rounded-full py-3.5 text-sm"
-              >
-                REGISTER
-              </button>
-            </div>
-
-            <!-- hide login signup when auth = true -->
-            <div v-else class="mt-6 space-y-3">
-              <RouterLink to="/dashboard" class="block text-sm text-slate-700">
-                Dashboard
-              </RouterLink>
-              <span class="block text-sm text-slate-600"
-                >{{ authStore.fullName?.firstName || "" }}
-                {{ authStore.fullName?.lastName || "" }}</span
-              >
-              <button @click="handleLogout" class="text-sm text-red-600">
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </nav>
 
     <BaseModal :open="openModal" @close="closeLoginModal">
@@ -500,3 +424,14 @@ const handleLogout = async () => {
     </BaseModal>
   </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+.fade-enter-from,
+.fade-leave-from {
+  opacity: 0;
+}
+</style>

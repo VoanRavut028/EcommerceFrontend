@@ -51,14 +51,12 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
-  
-
   const exchangeOAuthCode = async (code: any, state: any, provider: any) => {
     const storedState = sessionStorage.getItem("oauth_state");
     if (!storedState || storedState !== state) {
       throw new Error("State mismatch — possible CSRF attack");
     }
-    sessionStorage.removeItem("oauth_state");
+ 
 
     const { data } = await api.post(`/auth/${provider}/callback`, { code });
     tokenStore.set(data.accessToken);
