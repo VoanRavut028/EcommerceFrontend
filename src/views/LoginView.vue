@@ -181,7 +181,7 @@
 <script setup lang="ts">
 import { useAuth } from "@/composables/useAuth";
 import { validateLogin } from "@/composables/loginValidate";
-import { computed, ref, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useI18n } from "vue-i18n";
 const { loginWithProvider, loginWithCredentials, isLoading } = useAuth();
@@ -210,8 +210,9 @@ const handleLoginWithCredentail = async () => {
 
   try {
     await loginWithCredentials(email.value, password.value);
+    emit("close");
   } catch (err: any) {
-    throw new Error(err);
+    console.error(err);
   } finally {
     console.log(`Loading state ${isLoading}`);
   }

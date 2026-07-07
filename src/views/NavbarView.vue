@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref, nextTick } from "vue";
+import { ref, nextTick, watch } from "vue";
 import BaseModal from "@/components/BaseModal.vue";
 import LoginView from "./LoginView.vue";
 import RegisterView from "./RegisterView.vue";
 import MobileNav from "@/components/MobileNav.vue";
 import { useAuthStore } from "@/stores/auth.ts";
-import LogoutView from "./LogoutView.vue";
 import { useI18n } from "vue-i18n";
 import LangDropdown from "@/components/LangDropdown.vue";
 const { t } = useI18n();
@@ -17,20 +16,35 @@ const openRegisterModal = ref(false);
 const openLoginModal = () => {
   openModal.value = true;
   openRegisterModal.value = false;
+  authStore.showAuthModal = true;
 };
 
 const closeLoginModal = () => {
   openModal.value = false;
+  authStore.showAuthModal = false;
 };
 
 const openRegisterModalOnly = () => {
   openRegisterModal.value = true;
   openModal.value = false;
+  authStore.showAuthModal = true;
 };
 
 const closeRegisterModal = () => {
   openRegisterModal.value = false;
+  authStore.showAuthModal = false;
 };
+
+watch(
+  () => authStore.isAuthenticated,
+  (isAuthenticated) => {
+    if (isAuthenticated) {
+      openModal.value = false;
+      openRegisterModal.value = false;
+      authStore.showAuthModal = false;
+    }
+  },
+);
 
 // const isAuthenticated = computed(() => authStore.isAuthenticated);
 
@@ -149,7 +163,7 @@ function onClear() {
         <!-- Logo -->
         <div class="justify-self-center">
           <p
-            class="text-[20px] hidden lg:flex lg:text-4xl sm:text-2xl font-[900] tracking-tighter text-black"
+            class="text-[20px] hidden sm:text-2xl lg:flex lg:text-2xl xl:text-4xl font-[900] tracking-tighter text-black"
           >
             VUT SHOP
           </p>
@@ -329,10 +343,10 @@ function onClear() {
             v-if="!authStore.isAuthenticated"
             class="hidden lg:flex items-center gap-3 text-[16px] font-bold text-gray-800"
           >
-            <button @click="openLoginModal()" class="btn-gost">
+            <button @click="openLoginModal()" class="">
               {{ t("nav.signIn").toUpperCase() }}
             </button>
-            <button @click="openRegisterModalOnly()" class="btn-gray">
+            <button @click="openRegisterModalOnly()" class="">
               {{ t("nav.register").toUpperCase() }}
             </button>
           </div>

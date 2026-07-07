@@ -76,21 +76,8 @@ const initAuth = async () => {
   const authStore = useAuthStore();
   authInit = (async () => {
     try {
-      console.log("baseURL:", authInitApi.defaults.baseURL);
-      console.log("withCredentials:", authInitApi.defaults.withCredentials);
       await authStore.initializeAuth();
       console.log(`Auth user is : ${authStore.user}`);
-      await authInitApi
-        .post("/refresh")
-        .then(({ data }) => tokenStore.set(data.accessToken))
-        .catch((err) => {
-          console.log(
-            "refresh failed:",
-            err.response?.status,
-            err.response?.data,
-          );
-          tokenStore.clear();
-        });
     } catch (error) {
       console.log("auth init failed:", error);
     }
@@ -101,10 +88,9 @@ const initAuth = async () => {
 
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
-  const hasToken = tokenStore.get() !== null;
-  const shouldInitAuth = to.meta.requiresAuth || hasToken;
 
-  if (shouldInitAuth) {
+  if (!bootstrapped) {
+    bootstrapped = true;
     await initAuth();
   }
 
@@ -114,9 +100,10 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth && !isAuthenticated) {
     next("/index");
   } else if (to.meta.guestOnly && isAuthenticated) {
-    next("/dashboard");
+    next("/index");
   } else {
     next();
   }
 });
+
 export default router;

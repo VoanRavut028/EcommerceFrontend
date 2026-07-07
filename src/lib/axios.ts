@@ -60,7 +60,12 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      await authStore.refreshToken();
+      const token = await authStore.refreshToken();
+      refreshQueue.forEach(({ resolve }) => resolve(token));
+      refreshQueue = [];
+      if (original.headers) {
+        original.headers.Authorization = `Bearer ${token}`;
+      }
       return api(original);
     } catch (refreshErr) {
       refreshQueue.forEach(({ reject }) => reject(refreshErr));

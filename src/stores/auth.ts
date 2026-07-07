@@ -29,10 +29,28 @@ export const useAuthStore = defineStore("auth", () => {
       console.log(`init auth is running success ${res.data.message}`);
       user.value = res.data.user;
       console.log(`User data after init: ${res.data.user}`);
-      tokenStore.set(res.data.accessToken);
+      if (res.data.accessToken) {
+        tokenStore.set(res.data.accessToken);
+      }
       isAuthenticated.value = true;
-    } catch (error) {
-      logout();
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        try {
+          await refreshToken();
+          const retry = await api.get("/profile");
+          user.value = retry.data.user;
+          if (retry.data.accessToken) {
+            tokenStore.set(retry.data.accessToken);
+          }
+          isAuthenticated.value = true;
+        } catch (retryError) {
+          clearSession();
+          throw retryError;
+        }
+      } else {
+        clearSession();
+        throw error;
+      }
     } finally {
       isLoading.value = false;
     }
@@ -43,9 +61,11 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       const { data } = await authInitApi.post("/refresh");
       tokenStore.set(data.accessToken);
-      // isAuthenticated.value = true;
-    } catch {
+      isAuthenticated.value = true;
+      return data.accessToken;
+    } catch (error) {
       clearSession();
+      throw error;
     } finally {
       isLoading.value = false;
     }
@@ -56,7 +76,6 @@ export const useAuthStore = defineStore("auth", () => {
     if (!storedState || storedState !== state) {
       throw new Error("State mismatch — possible CSRF attack");
     }
- 
 
     const { data } = await api.post(`/auth/${provider}/callback`, { code });
     tokenStore.set(data.accessToken);

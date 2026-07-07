@@ -33,7 +33,7 @@ onMounted(async () => {
 <template>
   <div class="p-8">
     <div v-if="user">
-      <h1 class="text-xl font-bold">Welcome, {{ user.first_name }}</h1>
+      <h1 class="text-xl font-bold">Welcome, {{ user.name }}</h1>
       <pre class="mt-4 bg-gray-100 p-4 rounded text-sm">{{
         JSON.stringify(user, null, 2)
       }}</pre>

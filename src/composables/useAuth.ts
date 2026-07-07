@@ -15,11 +15,7 @@ export function useAuth() {
   const router = useRouter();
 
   function loginWithProvider(provider: OAuthProvider) {
-    window.open(
-      `${import.meta.env.VITE_API_URL}/auth/${provider}`,
-      "_blank",
-      "noopener,noreferrer",
-    );
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
   }
 
   async function loginWithCredentials(
@@ -40,13 +36,13 @@ export function useAuth() {
 
       console.log("All accessible browser cookies:", document.cookie);
       const queryRedirect = router.currentRoute.value.query.redirect;
-      let safeRedirect = "/dashboard";
+      // let safeRedirect = "/index";
 
-      if (typeof queryRedirect === "string" && queryRedirect.startsWith("/")) {
-        safeRedirect = queryRedirect;
-      }
+      // if (typeof queryRedirect === "string" && queryRedirect.startsWith("/")) {
+      //   safeRedirect = queryRedirect;
+      // }
 
-      await router.push(safeRedirect);
+      // await router.push(safeRedirect);
     } catch (error: any) {
       const message = error.response?.data?.message || "Login failed";
       throw new Error(message);

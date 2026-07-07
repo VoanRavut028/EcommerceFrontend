@@ -31,16 +31,28 @@
   width: 100%;
 }
 
+@utility ant-row {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
 @media (min-width: 640px) {
   .container {
     max-width: 640px;
     padding-inline: 1.5rem;
+  }
+  .ant-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 768px) {
   .container {
     max-width: 768px;
+  }
+  .ant-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -49,11 +61,17 @@
     max-width: 1024px;
     padding-inline: 2rem;
   }
+  .ant-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1280px) {
   .container {
     max-width: 1280px;
+  }
+  .ant-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -61,11 +79,17 @@
   .container {
     max-width: 1536px;
   }
+  .ant-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
-
 .btn-gost {
   @apply bg-foreground text-white rounded-full px-6 py-2.5 text-sm hover:bg-background  transition-colors;
 }
 .btn-gray {
   @apply bg-background text-white rounded-full px-6 py-2.5 text-sm hover:bg-gray-600 transition-colors;
+}
+
+.hover-underline:hover {
+  text-decoration: underline;
 }
