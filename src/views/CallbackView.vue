@@ -14,26 +14,10 @@ onMounted(async () => {
 
   if (accessToken) {
     tokenStore.set(accessToken);
-
-    try {
-      const { data } = await api.get("/auth/me");
-      authStore.user = data.user;
-      authStore.isAuthenticated = true;
-    } catch (err) {
-      // token was bad / request failed — bail out to login instead of dashboard
-      router.replace("/login");
-      return;
-    }
   }
 
-  // clean the token out of the URL and send them to the app
-  router.replace("/dashboard");
+  router.replace("/index");
 });
 </script>
 
-<template>
-  <div>
-    <!-- optional: loading spinner while the callback resolves -->
-    <p>Signing you in...</p>
-  </div>
-</template>
+<template></template>

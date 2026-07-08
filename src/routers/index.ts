@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { tokenStore } from "@/lib/tokenStore";
-import authInitApi from "@/services/authInit";
 
 const routes = [
   {

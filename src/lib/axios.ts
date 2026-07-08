@@ -70,8 +70,8 @@ api.interceptors.response.use(
     } catch (refreshErr) {
       refreshQueue.forEach(({ reject }) => reject(refreshErr));
       refreshQueue = [];
+      authStore.clearSession();
       tokenStore.clear();
-      window.location.href = "/index";
       return Promise.reject(refreshErr);
     } finally {
       isRefreshing = false;

@@ -24,6 +24,11 @@ export const useAuthStore = defineStore("auth", () => {
   const initializeAuth = async () => {
     try {
       isLoading.value = true;
+
+      if (!tokenStore.get()) {
+        await refreshToken();
+      }
+
       const res = await api.get("/profile");
       console.log(`init auth is running success ${res.data.success}`);
       console.log(`init auth is running success ${res.data.message}`);
@@ -34,23 +39,8 @@ export const useAuthStore = defineStore("auth", () => {
       }
       isAuthenticated.value = true;
     } catch (error: any) {
-      if (error.response?.status === 401) {
-        try {
-          await refreshToken();
-          const retry = await api.get("/profile");
-          user.value = retry.data.user;
-          if (retry.data.accessToken) {
-            tokenStore.set(retry.data.accessToken);
-          }
-          isAuthenticated.value = true;
-        } catch (retryError) {
-          clearSession();
-          throw retryError;
-        }
-      } else {
-        clearSession();
-        throw error;
-      }
+      clearSession();
+      throw error;
     } finally {
       isLoading.value = false;
     }
