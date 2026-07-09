@@ -4,6 +4,7 @@ import BaseModal from "@/components/BaseModal.vue";
 import LoginView from "./LoginView.vue";
 import RegisterView from "./RegisterView.vue";
 import MobileNav from "@/components/MobileNav.vue";
+import ThemeToggle from "@/components/ThemeToggle.vue";
 import { useAuthStore } from "@/stores/auth.ts";
 import { useI18n } from "vue-i18n";
 import LangDropdown from "@/components/LangDropdown.vue";
@@ -79,8 +80,8 @@ function onClear() {
 }
 </script>
 <template>
-  <div>
-    <nav class="container bg-white">
+  <div class="fixed inset-x-0 top-0 z-[1000] border-b-1 border-accent">
+    <nav class="container mx-auto bg-dominant py-2">
       <div class="flex justify-between items-center">
         <div class="lg:hidden shrink-0">
           <MobileNav
@@ -90,12 +91,12 @@ function onClear() {
           />
         </div>
         <!-- Left Menu -->
-        <div class="hidden lg:flex lg:items-center text-black font-bold">
+        <div class="hidden lg:flex lg:items-center font-bold">
           <ul class="flex items-center">
             <!-- Products Dropdown -->
             <li class="relative group">
               <span
-                class="flex items-center hover:cursor-pointer gap-2 uppercase transition-all duration-300"
+                class="flex items-center text-text hover:cursor-pointer hover:text-accent active:text-accent gap-2 transition-all duration-300 relative after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100 active:after:scale-x-100"
               >
                 {{ t("nav.products") }}
                 <span
@@ -107,33 +108,33 @@ function onClear() {
                 class="absolute left-0 pt-4 w-60 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-50"
               >
                 <div
-                  class="bg-white border border-gray-100 shadow-xl py-2 rounded-md"
+                  class="bg-dominant border border-gray-100 shadow-xl py-2 rounded-md"
                 >
                   <RouterLink to="/">
                     <a
-                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 hover:text-black hover:bg-gray-50 hover:underline hover:text-[17px] transition-colors"
+                      class="block px-6 py-3 text-[16px] text-text hover:text-accent relative after:absolute after:left-6 after:right-6 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100 transition-colors"
                     >
                       {{ t("nav.kitchen") }}
                     </a>
                   </RouterLink>
                   <RouterLink to="/products/fashion">
                     <a
-                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 hover:text-black hover:underline hover:text-[17px] hover:bg-gray-50 transition-colors"
+                      class="block px-6 py-3 text-[16px] text-text hover:text-accent relative after:absolute after:left-6 after:right-6 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100 transition-colors"
                     >
-                      {{ t("nav.fashion").toUpperCase() }}
+                      {{ t("nav.fashion") }}
                     </a>
                   </RouterLink>
                   <RouterLink to="/products/Electronics">
                     <a
-                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 hover:text-black hover:underline hover:text-[17px] hover:bg-gray-50 transition-colors"
+                      class="block px-6 py-3 text-[16px] text-text hover:text-accent relative after:absolute after:left-6 after:right-6 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100 transition-colors"
                     >
-                      {{ t("nav.electronics").toUpperCase() }}
+                      {{ t("nav.electronics") }}
                     </a>
                   </RouterLink>
                   <div class="mx-6 border-t border-gray-50 my-1"></div>
                   <RouterLink to="/products/all">
                     <a
-                      class="block px-6 py-3 text-[16px] uppercase text-gray-950 hover:text-black hover:underline hover:text-[17px] hover:bg-gray-50 transition-colors"
+                      class="block px-6 py-3 text-[16px] text-text hover:text-accent relative after:absolute after:left-6 after:right-6 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100 transition-colors"
                     >
                       {{ t("nav.shopAll") }}
                     </a>
@@ -143,19 +144,19 @@ function onClear() {
             </li>
 
             <li
-              class="hover:bg-gray-100 px-5 py-3 transition-colors cursor-pointer rounded"
+              class="px-5 py-3 transition-colors cursor-pointer rounded text-text hover:text-accent relative after:absolute after:left-5 after:right-5 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100"
             >
-              {{ t("nav.men").toUpperCase() }}
+              {{ t("nav.men") }}
             </li>
             <li
-              class="hover:bg-gray-100 px-5 py-3 transition-colors cursor-pointer rounded"
+              class="px-5 py-3 transition-colors cursor-pointer rounded text-text hover:text-accent relative after:absolute after:left-5 after:right-5 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100"
             >
-              {{ t("nav.boys").toUpperCase() }}
+              {{ t("nav.boys") }}
             </li>
             <li
-              class="hover:bg-gray-100 px-5 py-3 transition-colors cursor-pointer rounded"
+              class="px-5 py-3 transition-colors cursor-pointer rounded text-text hover:text-accent relative after:absolute after:left-5 after:right-5 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100"
             >
-              {{ t("nav.girls").toUpperCase() }}
+              {{ t("nav.girls") }}
             </li>
           </ul>
         </div>
@@ -163,7 +164,7 @@ function onClear() {
         <!-- Logo -->
         <div class="justify-self-center">
           <p
-            class="text-[20px] hidden sm:text-2xl lg:flex lg:text-2xl xl:text-4xl font-[900] tracking-tighter text-black"
+            class="text-normal text-[20px] hidden sm:text-2xl lg:flex lg:text-2xl xl:text-4xl font-[900] tracking-tighter"
           >
             VUT SHOP
           </p>
@@ -176,12 +177,12 @@ function onClear() {
           <Transition name="fade">
             <div
               v-if="isSearchOpen"
-              class="fixed inset-0 z-50 bg-black/30"
+              class="fixed inset-0 z-50 bg-dominant"
               @click.self="closeSearch"
             >
-              <div class="w-full bg-white shadow-md">
+              <div class="w-full bg-dominant shadow-md">
                 <!-- Top dark strip -->
-                <div class="h-2 bg-slate-800 w-full"></div>
+                <div class="h-2 bg-dominant w-full"></div>
 
                 <!-- Search bar -->
                 <div class="px-6 py-4">
@@ -193,7 +194,7 @@ function onClear() {
                       v-model="query"
                       type="text"
                       placeholder="What are you searching for?"
-                      class="w-full pr-16 text-base text-gray-700 placeholder-gray-500 outline-none bg-transparent"
+                      class="w-full pr-16 text-base text-text outline-none bg-transparent"
                       @keyup.enter="onSearch"
                       @keyup.esc="closeSearch"
                     />
@@ -249,11 +250,11 @@ function onClear() {
             </div>
           </Transition>
           <!-- Icons -->
-          <div class="flex items-center gap-3 text-gray-700">
+          <div class="flex items-center gap-3 text-text">
             <button
               type="button"
               @click="openSearch"
-              class="hover:text-black transition-colors hover:cursor-pointer p-2 rounded-full"
+              class="hover:text-accent transition-colors hover:cursor-pointer p-2 rounded-full"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -272,7 +273,7 @@ function onClear() {
             </button>
 
             <button
-              class="hover:text-black transition-colors hover:cursor-pointer"
+              class="hover:text-accent transition-colors hover:cursor-pointer"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -291,7 +292,7 @@ function onClear() {
             </button>
 
             <button
-              class="hover:text-black cursor-pointer transition-colors"
+              class="hover:text-accent cursor-pointer transition-colors"
               @click="$router.push('/MyWishlist')"
             >
               <svg
@@ -311,7 +312,7 @@ function onClear() {
             </button>
 
             <button
-              class="relative hover:text-black cursor-pointer transition-colors"
+              class="relative hover:text-accent cursor-pointer transition-colors"
               @click="$router.push('/cart')"
             >
               <svg
@@ -329,32 +330,39 @@ function onClear() {
                 />
               </svg>
               <span
-                class="absolute -top-1 -right-1 bg-red-600 text-white text-[16px] font-bold px-1.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center"
+                class="absolute -top-1 -right-1 bg-accent text-white text-[16px] font-bold px-1.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center"
               >
                 0
               </span>
             </button>
 
             <LangDropdown />
+            <ThemeToggle />
           </div>
 
           <!-- Auth Buttons -->
           <div
             v-if="!authStore.isAuthenticated"
-            class="hidden lg:flex items-center gap-3 text-[16px] font-bold text-gray-800"
+            class="hidden lg:flex items-center gap-3 text-[16px] font-bold text-text"
           >
-            <button @click="openLoginModal()" class="">
-              {{ t("nav.signIn").toUpperCase() }}
+            <button
+              @click="openLoginModal()"
+              class="btn-primary cursor-pointer"
+            >
+              {{ t("nav.signIn") }}
             </button>
-            <button @click="openRegisterModalOnly()" class="">
-              {{ t("nav.register").toUpperCase() }}
+            <button
+              @click="openRegisterModalOnly()"
+              class="btn-secondary cursor-pointer"
+            >
+              {{ t("nav.register") }}
             </button>
           </div>
           <!-- user info -->
           <!-- In your Navbar -->
           <div
             v-else
-            class="hidden lg:flex items-center gap-3 text-sm text-gray-700"
+            class="hidden lg:flex items-center gap-3 text-sm text-text"
           >
             <button
               @click="showLogoutModal = true"
@@ -362,7 +370,7 @@ function onClear() {
             >
               <!-- Avatar -->
               <div
-                class="w-8 h-8 rounded-full overflow-hidden border border-gray-200"
+                class="w-8 h-8 rounded-full overflow-hidden border border-dominant"
               >
                 <img
                   v-if="authStore.user?.avatar_url"

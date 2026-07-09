@@ -14,7 +14,7 @@ const localeStore = useLocaleStore();
 
 <template>
   <!-- <testing /> -->
-  <div :class="[localeStore.fontClass]">
+  <div :class="[localeStore.fontClass, 'min-h-screen pt-24']">
     <router-view />
   </div>
   <!-- <AuthModal v-if="authStore.showAuthModal" /> -->

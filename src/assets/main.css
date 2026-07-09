@@ -1,68 +1,66 @@
-@import url("https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Freehand&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Fasthand&family=Freehand&family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
-@theme {
-  /* Defining the primary color spectrum variables for Tailwind v4 */
-  --color-primary-50: #f5f3ff;
-  --color-primary-300: #c7d2fe;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-brand-blue: #0066dc;
-  --color-brand-dark: #111111;
-  --color-slat-purple: #e8def8;
-  --color-bold-purple: #6750a4;
-  /* Retaining your standard structural tokens */
-  --color-border: #e2e8f0;
-  --color-background: #363635;
-  --color-foreground: #1f1f1e;
-  --color-white: #ffffff;
-  --color-black: #000000;
-  --font-khmer: "Noto Sans Khmer", sans-serif;
-  --font-english: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+
+html,
+body,
+#app {
+  min-height: 100%;
+  background-color: var(--dominant);
+  color: var(--text);
 }
 
+body {
+  margin: 0;
+}
+
+:root {
+  /* Warm & Elegant Palette - Light Mode */
+  --dominant: #faf7f4;
+  --secondary: #f3ede8;
+  --accent: #f97316;
+  --text: #3f2e1e;
+  --text-muted: #6b5e4e;
+
+  /* Fonts */
+  --font-khmer: "Battambang", system-ui, sans-serif;
+  --font-english: "Inter", system-ui, sans-serif;
+}
+
+.dark {
+  /* Warm & Elegant Palette - Dark Mode */
+  --dominant: #1c1917;
+  --secondary: #292524;
+  --accent: #fb923c;
+  --text: #f5f0e8;
+  --text-muted: #a8a29e;
+}
+
+/* Base Tailwind Container Customization */
 @utility container {
   margin-inline: auto;
   padding-inline: 1rem;
   width: 100%;
+  max-width: 1280px; /* Default max width */
 }
 
-@utility ant-row {
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 1.5rem;
-}
-
+/* Responsive Container & Grid */
 @media (min-width: 640px) {
   .container {
-    max-width: 640px;
     padding-inline: 1.5rem;
-  }
-  .ant-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 768px) {
   .container {
-    max-width: 768px;
-  }
-  .ant-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-inline: 2rem;
   }
 }
 
 @media (min-width: 1024px) {
   .container {
     max-width: 1024px;
-    padding-inline: 2rem;
-  }
-  .ant-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -70,26 +68,186 @@
   .container {
     max-width: 1280px;
   }
+}
+
+/* Custom Grid Utility */
+@utility ant-row {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .ant-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .ant-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
   .ant-row {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-
-@media (min-width: 1536px) {
-  .container {
-    max-width: 1536px;
-  }
-  .ant-row {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-.btn-gost {
-  @apply bg-foreground text-white rounded-full px-6 py-2.5 text-sm hover:bg-background  transition-colors;
-}
-.btn-gray {
-  @apply bg-background text-white rounded-full px-6 py-2.5 text-sm hover:bg-gray-600 transition-colors;
+/* Primary Button */
+.btn-primary {
+  background-color: var(--accent);
+  color: text;
+  font-weight: 500;
+  border-radius: 0px;
+  padding: 8px 23px;
+  font-size: 1rem;
+  box-shadow:
+    0 10px 15px -3px rgba(249, 115, 22, 0.3),
+    0 4px 6px -2px rgba(249, 115, 22, 0.2);
+  transition: all 200ms ease;
 }
 
+.btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow:
+    0 20px 25px -5px rgba(249, 115, 22, 0.3),
+    0 8px 10px -6px rgba(249, 115, 22, 0.25);
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--text);
+  border: 1px solid rgba(63, 46, 30, 0.2);
+  font-weight: 500;
+  border-radius: 0px;
+  padding: 8px 23px;
+  font-size: 1rem;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(243, 237, 232, 0.8);
+  border-color: rgba(63, 46, 30, 0.3);
+  color:black;
+}
+
+/* Outline Button */
+.btn-outline {
+  background-color: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  font-weight: 500;
+  border-radius: 1.5rem;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  transition: all 200ms ease;
+}
+
+.btn-outline:hover {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+/* Ghost Button */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text);
+  font-weight: 500;
+  border-radius: 1.5rem;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  transition: background-color 200ms ease;
+}
+
+.btn-ghost:hover {
+  background-color: rgba(63, 46, 30, 0.05);
+}
+
+/* Small Button */
+.btn-sm {
+  @apply px-5 py-2.5 text-sm rounded-xl;
+}
+
+/* Large Button */
+.btn-lg {
+  @apply px-10 py-4 text-lg rounded-3xl;
+}
+
+/* Utility Classes */
 .hover-underline:hover {
   text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Tailwind-friendly theme utilities */
+@theme inline {
+  --color-dominant: var(--dominant);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+}
+
+.text-dominant {
+  color: var(--dominant);
+}
+
+.bg-dominant {
+  background-color: var(--dominant);
+}
+
+.text-secondary {
+  color: var(--secondary);
+}
+.bg-secondary {
+  background-color: var(--secondary);
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+.bg-accent {
+  background-color: var(--accent);
+}
+
+/* Welcome page layout helpers */
+.welcome-shell {
+  /* background-color: var(--dominant); */
+}
+
+.welcome-hero-grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .welcome-hero-grid {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+    align-items: stretch;
+  }
+}
+
+.welcome-card {
+  background: var(--secondary);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 45px -24px rgba(63, 46, 30, 0.35);
+}
+
+.welcome-image-slot {
+  min-height: 320px;
+  border: 1px dashed rgba(63, 46, 30, 0.18);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.65),
+    rgba(243, 237, 232, 0.75)
+  );
 }

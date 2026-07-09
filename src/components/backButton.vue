@@ -7,7 +7,6 @@
 
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
-import { withDefaults, defineProps } from "vue";
 
 const props = withDefaults(
   defineProps<{
