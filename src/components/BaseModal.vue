@@ -1,5 +1,5 @@
 <script setup>
-const props = defineProps({
+const prop = defineProps({
   open: {
     type: Boolean,
     default: false,
@@ -9,12 +9,6 @@ const props = defineProps({
     default: "",
   },
 });
-
-const emit = defineEmits(["close"]);
-
-const close = () => {
-  emit("close");
-};
 </script>
 
 <template>
@@ -28,7 +22,7 @@ const close = () => {
   >
     <div
       v-if="open"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+      class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 px-4"
     >
       <div class="h-fit max-w-sm">
         <div>

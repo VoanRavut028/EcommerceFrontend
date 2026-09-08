@@ -59,3 +59,22 @@ export const validateLogin = (payload: { email: string; password: string }) => {
     errors,
   };
 };
+
+export const normalizePhone = (raw: string, defaultCountryCode = "+855") => {
+  const code = defaultCountryCode.replace(/\D/g, "");
+  let digits = raw.replace(/[\s\-().]/g, "").replace(/\D/g, "");
+
+  // Country code present with a "0" national prefix (e.g. 855012345678)
+  if (digits.startsWith(`${code}0`)) {
+    digits = `${code}${digits.slice(code.length + 1)}`;
+  } else if (digits.startsWith("0")) {
+    digits = digits.slice(1);
+  }
+
+  // Caller already included the country code: don't prepend it again
+  if (digits.startsWith(code)) {
+    return `+${digits}`;
+  }
+
+  return `+${code}${digits}`;
+};

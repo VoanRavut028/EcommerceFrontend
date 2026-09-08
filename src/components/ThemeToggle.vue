@@ -13,7 +13,7 @@ onMounted(() => {
   <button
     @click="toggle"
     aria-label="Toggle dark mode"
-    class="flex items-center justify-center cursor-pointer rounded-full p-2  transition-colors hover:bg-accent hover:text-dominant "
+    class="flex items-center justify-center cursor-pointer rounded-full p-2 transition-colors dark:hover:!text-text dark:!bg-accent"
   >
     <svg
       v-if="isDark"

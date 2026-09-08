@@ -47,6 +47,7 @@
           <input
             v-model="email"
             type="email"
+            autocomplete="username"
             :placeholder="t('auth.enterEmail')"
             class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
           />
@@ -64,6 +65,7 @@
           <input
             v-model="password"
             type="password"
+            autocomplete="current-password"
             :placeholder="t('auth.enterPassword')"
             class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
           />
@@ -210,7 +212,7 @@ const handleLoginWithCredentail = async () => {
 
   try {
     await loginWithCredentials(email.value, password.value);
-    emit("close");
+    emit("close", false);
   } catch (err: any) {
     console.error(err);
   } finally {
@@ -219,15 +221,14 @@ const handleLoginWithCredentail = async () => {
 };
 
 const emit = defineEmits<{
-  (e: "close"): void;
-  (e: "close-register"): void;
+  close: [value: boolean];
+  openRegister: [value: boolean];
 }>();
 const handleClosePopup = () => {
-  emit("close");
+  emit("close", false);
 };
 
 const switchToRegister = () => {
-  emit("close");
-  emit("close-register");
+  emit("openRegister", true);
 };
 </script>

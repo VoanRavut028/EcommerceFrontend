@@ -3,6 +3,7 @@ import { ref, nextTick, watch } from "vue";
 import BaseModal from "@/components/BaseModal.vue";
 import LoginView from "./LoginView.vue";
 import RegisterView from "./RegisterView.vue";
+import LogoutModal from "./LogoutView.vue";
 import MobileNav from "@/components/MobileNav.vue";
 import ThemeToggle from "@/components/ThemeToggle.vue";
 import { useAuthStore } from "@/stores/auth.ts";
@@ -20,9 +21,10 @@ const openLoginModal = () => {
   authStore.showAuthModal = true;
 };
 
-const closeLoginModal = () => {
-  openModal.value = false;
-  authStore.showAuthModal = false;
+const closeLoginModal = (val: boolean) => {
+  openModal.value = val;
+
+  authStore.showAuthModal = val;
 };
 
 const openRegisterModalOnly = () => {
@@ -31,9 +33,9 @@ const openRegisterModalOnly = () => {
   authStore.showAuthModal = true;
 };
 
-const closeRegisterModal = () => {
-  openRegisterModal.value = false;
-  authStore.showAuthModal = false;
+const closeRegisterModal = (val: boolean) => {
+  openRegisterModal.value = val;
+  authStore.showAuthModal = val;
 };
 
 watch(
@@ -80,8 +82,8 @@ function onClear() {
 }
 </script>
 <template>
-  <div class="fixed inset-x-0 top-0 z-[1000] border-b-1 border-accent">
-    <nav class="container mx-auto bg-dominant py-2">
+  <div class="fixed inset-x-0 top-0 z-[1000] dark:!bg-navbar">
+    <nav class="container mx-auto bg-dominant py-2 dark:!bg-navbar">
       <div class="flex justify-between items-center">
         <div class="lg:hidden shrink-0">
           <MobileNav
@@ -346,14 +348,14 @@ function onClear() {
             class="hidden lg:flex items-center gap-3 text-[16px] font-bold text-text"
           >
             <button
-              @click="openLoginModal()"
-              class="btn-primary cursor-pointer"
+              @click="openLoginModal"
+              class="btn-secondary cursor-pointer dark:!bg-accent dark:hover:!border-text"
             >
               {{ t("nav.signIn") }}
             </button>
             <button
-              @click="openRegisterModalOnly()"
-              class="btn-secondary cursor-pointer"
+              @click="openRegisterModalOnly"
+              class="btn-secondary dark:!bg-accent dark:hover:!border-text cursor-pointer"
             >
               {{ t("nav.register") }}
             </button>
@@ -429,19 +431,19 @@ function onClear() {
       </div>
     </nav>
 
-    <BaseModal :open="openModal" @close="closeLoginModal">
+    <BaseModal :open="openModal">
       <LoginView
         v-if="openModal"
         @close="closeLoginModal"
-        @close-register="openRegisterModalOnly()"
+        @open-register="openRegisterModalOnly"
       ></LoginView>
     </BaseModal>
 
-    <BaseModal :open="openRegisterModal" @close="closeRegisterModal">
+    <BaseModal :open="openRegisterModal">
       <RegisterView
         v-if="openRegisterModal"
         @close="closeRegisterModal"
-        @close-login="openLoginModal()"
+        @open-login="openLoginModal"
       ></RegisterView>
     </BaseModal>
   </div>

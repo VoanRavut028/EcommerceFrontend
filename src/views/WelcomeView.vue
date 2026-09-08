@@ -2,7 +2,9 @@
   <section class="welcome-shell min-h-screen px-4 py-10 sm:px-6 lg:px-8">
     <div class="container mx-auto">
       <div class="welcome-hero-grid">
-        <div class="welcome-card rounded-[2rem] p-6 sm:p-8 lg:p-10">
+        <div
+          class="welcome-card rounded-[2rem] p-6 sm:p-8 lg:p-10 bg-dominant-alt"
+        >
           <div
             class="mb-6 inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium text-accent"
           >
@@ -16,7 +18,7 @@
           </h1>
 
           <p
-            class="mt-5 max-w-xl text-lg leading-8 text-[color:var(--text-muted)]"
+            class="mt-5 max-w-xl text-lg leading-8 text-[color:var(--text-muted)] bg-secondary"
           >
             A warm, modern storefront built around clarity, comfort, and
             confidence. This welcome section follows a simple 60/30/10 balance
@@ -24,11 +26,11 @@
           </p>
 
           <div class="mt-8 flex flex-wrap gap-3">
-            <button class="btn-primary">Start shopping</button>
+            <button class="bg-accent">Start shopping</button>
             <button class="btn-secondary">Explore collection</button>
           </div>
 
-          <div class="mt-10 grid gap-4 sm:grid-cols-3">
+          <!-- <div class="mt-10 grid gap-4 sm:grid-cols-3">
             <div class="rounded-2xl bg-white/70 p-4 shadow-sm">
               <p class="text-2xl font-bold text-[color:var(--text)]">60%</p>
               <p class="mt-1 text-sm text-[color:var(--text-muted)]">
@@ -45,7 +47,7 @@
               <p class="text-2xl font-bold text-[color:var(--text)]">10%</p>
               <p class="mt-1 text-sm text-[color:var(--text-muted)]">Action</p>
             </div>
-          </div>
+          </div> -->
         </div>
 
         <div class="welcome-card rounded-[2rem] p-6 sm:p-8">
@@ -63,7 +65,7 @@
 
             <div class="welcome-image-slot mt-6 rounded-[1.5rem]">
               <img
-                src="https://res.cloudinary.com/dp8iza2d9/image/upload/v1783573317/63a15ab1c99e99d69dbe2efc9440b0b4_cx0o77.jpg"
+                src="https://res.cloudinary.com/dp8iza2d9/image/upload/v1785306607/intro-1_wiodtv.png"
                 alt=""
               />
             </div>

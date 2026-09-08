@@ -10,18 +10,58 @@ body,
   background-color: var(--dominant);
   color: var(--text);
 }
+@theme inline {
+  --color-navbar: var(--navbar);
+}
 
 body {
   margin: 0;
 }
-
 :root {
-  /* Warm & Elegant Palette - Light Mode */
-  --dominant: #faf7f4;
-  --secondary: #f3ede8;
-  --accent: #f97316;
-  --text: #3f2e1e;
-  --text-muted: #6b5e4e;
+  /* ===============================
+     LIGHT MODE
+     =============================== */
+
+  /* Backgrounds */
+  --dominant: #ffffff;
+  --dominant-alt: #f8fafc; /* Page section */
+  --secondary: #ffffff; /* Cards */
+  --accent: #eef2ff; /* Light blue surface */
+
+  /* Brand */
+  --primary: #4f46e5; /* Indigo */
+  --primary-hover: #4338ca;
+  --primary-light: #6366f1;
+
+  /* Text */
+  --text: #374151;
+  --text-strong: #111827;
+  --text-muted: #6b7280;
+
+  /* Border */
+  --border: #e5e7eb;
+
+  /* Navbar */
+  --navbar: rgba(255, 255, 255, 0.85);
+  --navbar-border: #f1f5f9;
+
+  /* Buttons */
+  --btn-primary-bg: var(--primary);
+  --btn-primary-hover: var(--primary-hover);
+  --btn-primary-text: #ffffff;
+
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-hover: #f8fafc;
+  --btn-secondary-text: #111827;
+  --btn-secondary-border: #d1d5db;
+
+  /* Status */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* Shadow */
+  --shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
 
   /* Fonts */
   --font-khmer: "Battambang", system-ui, sans-serif;
@@ -29,12 +69,50 @@ body {
 }
 
 .dark {
-  /* Warm & Elegant Palette - Dark Mode */
-  --dominant: #1c1917;
-  --secondary: #292524;
-  --accent: #fb923c;
-  --text: #f5f0e8;
-  --text-muted: #a8a29e;
+  /* ===============================
+     DARK MODE
+     =============================== */
+
+  /* Backgrounds */
+  --dominant: #0f1117;
+  --dominant-alt: #151922;
+  --secondary: #1b2130;
+  --accent: #22293a;
+
+  /* Brand */
+  --primary: #6366f1;
+  --primary-hover: #818cf8;
+  --primary-light: #8b5cf6;
+
+  /* Text */
+  --text: #d1d5db;
+  --text-strong: #ffffff;
+  --text-muted: #9ca3af;
+
+  /* Border */
+  --border: #2d3748;
+
+  /* Navbar */
+  --navbar: rgba(15, 17, 23, 0.85);
+  --navbar-border: #1f2937;
+
+  /* Buttons */
+  --btn-primary-bg: var(--primary);
+  --btn-primary-hover: var(--primary-hover);
+  --btn-primary-text: #ffffff;
+
+  --btn-secondary-bg: transparent;
+  --btn-secondary-hover: #1b2130;
+  --btn-secondary-text: #ffffff;
+  --btn-secondary-border: #374151;
+
+  /* Status */
+  --success: #22c55e;
+  --warning: #fbbf24;
+  --danger: #f87171;
+
+  /* Shadow */
+  --shadow: 0 16px 50px rgba(0, 0, 0, 0.45);
 }
 
 /* Base Tailwind Container Customization */
@@ -94,36 +172,12 @@ body {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-/* Primary Button */
-.btn-primary {
-  background-color: var(--accent);
-  color: text;
-  font-weight: 500;
-  border-radius: 0px;
-  padding: 8px 23px;
-  font-size: 1rem;
-  box-shadow:
-    0 10px 15px -3px rgba(249, 115, 22, 0.3),
-    0 4px 6px -2px rgba(249, 115, 22, 0.2);
-  transition: all 200ms ease;
-}
-
-.btn-primary:hover {
-  filter: brightness(1.1);
-  box-shadow:
-    0 20px 25px -5px rgba(249, 115, 22, 0.3),
-    0 8px 10px -6px rgba(249, 115, 22, 0.25);
-}
-
-.btn-primary:active {
-  transform: scale(0.97);
-}
 
 /* Secondary Button */
 .btn-secondary {
   background-color: var(--secondary);
   color: var(--text);
-  border: 1px solid rgba(63, 46, 30, 0.2);
+  border: 1px solid var(--border);
   font-weight: 500;
   border-radius: 0px;
   padding: 8px 23px;
@@ -134,9 +188,9 @@ body {
 }
 
 .btn-secondary:hover {
-  background-color: rgba(243, 237, 232, 0.8);
-  border-color: rgba(63, 46, 30, 0.3);
-  color:black;
+  background-color: rgba(31, 41, 55, 0.05);
+  border-color: rgba(31, 41, 55, 0.3);
+  color: var(--text-strong);
 }
 
 /* Outline Button */
@@ -168,7 +222,7 @@ body {
 }
 
 .btn-ghost:hover {
-  background-color: rgba(63, 46, 30, 0.05);
+  background-color: rgba(31, 41, 55, 0.05);
 }
 
 /* Small Button */
@@ -190,10 +244,13 @@ body {
 /* Tailwind-friendly theme utilities */
 @theme inline {
   --color-dominant: var(--dominant);
+  --color-dominant-alt: var(--dominant-alt);
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-text: var(--text);
+  --color-text-strong: var(--text-strong);
   --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
 }
 
 .text-dominant {
@@ -219,35 +276,9 @@ body {
   background-color: var(--accent);
 }
 
-/* Welcome page layout helpers */
-.welcome-shell {
-  /* background-color: var(--dominant); */
-}
-
-.welcome-hero-grid {
-  display: grid;
-  gap: 1.25rem;
-}
-
-@media (min-width: 1024px) {
+/* @media (min-width: 1024px) {
   .welcome-hero-grid {
     grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
     align-items: stretch;
   }
-}
-
-.welcome-card {
-  background: var(--secondary);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 20px 45px -24px rgba(63, 46, 30, 0.35);
-}
-
-.welcome-image-slot {
-  min-height: 320px;
-  border: 1px dashed rgba(63, 46, 30, 0.18);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.65),
-    rgba(243, 237, 232, 0.75)
-  );
-}
+} */

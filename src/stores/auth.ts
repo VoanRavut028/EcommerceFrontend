@@ -97,7 +97,30 @@ export const useAuthStore = defineStore("auth", () => {
   const clearRegistrationSuccess = () => {
     registrationSuccess.value = false;
   };
+  const signupInit = (
+    firstName: string,
+    lastName: string,
+    email: string,
+    phoneNumber: string,
+  ) =>
+    api.post("/register/init", {
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      phone_number: phoneNumber,
+    });
 
+  const signupVerifyOtp = (idToken: string, phone_number: string) =>
+    api.post("/register/verify", {
+      idToken: idToken,
+      phone_number: phone_number,
+    });
+
+  const signupComplete = (registrationTicket: string, password: string) =>
+    api.post("/register", {
+      registrationTicket: registrationTicket,
+      password: password,
+    });
   return {
     user,
     isAuthenticated,
@@ -114,5 +137,8 @@ export const useAuthStore = defineStore("auth", () => {
     logout,
     clearSession,
     clearRegistrationSuccess,
+    signupInit,
+    signupVerifyOtp,
+    signupComplete,
   };
 });
