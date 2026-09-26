@@ -1,7 +1,7 @@
 <template>
-  <section class="welcome-shell min-h-screen px-4 py-10 sm:px-6 lg:px-8">
+  <section class="welcome-shell min-h-screen px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
     <div class="container mx-auto">
-      <div class="welcome-hero-grid">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <div
           class="welcome-card rounded-[2rem] p-6 sm:p-8 lg:p-10 bg-dominant-alt"
         >
@@ -18,7 +18,7 @@
           </h1>
 
           <p
-            class="mt-5 max-w-xl text-lg leading-8 text-[color:var(--text-muted)] bg-secondary"
+            class="mt-5 max-w-xl text-base sm:text-lg leading-7 sm:leading-8 text-[color:var(--text-muted)] bg-secondary"
           >
             A warm, modern storefront built around clarity, comfort, and
             confidence. This welcome section follows a simple 60/30/10 balance
@@ -63,10 +63,11 @@
               </h2>
             </div>
 
-            <div class="welcome-image-slot mt-6 rounded-[1.5rem]">
+            <div class="welcome-image-slot mt-6 overflow-hidden rounded-[1.5rem]">
               <img
                 src="https://res.cloudinary.com/dp8iza2d9/image/upload/v1785306607/intro-1_wiodtv.png"
                 alt=""
+                class="w-full h-auto object-cover"
               />
             </div>
 

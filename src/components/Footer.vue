@@ -332,16 +332,16 @@
         <img
           src="https://zandokh.com/image/catalog/logo/web-footer/We-accept-payment–for-web-footer-2.png"
           alt="We accept ABA Pay, Credit/Debit Card, Wing, JCB, Bank Transfer, Cash on delivery and Chip Mong Bank."
-          class="footer_paymentMethod__2WiWs"
+          class="w-full max-w-[300px] h-auto footer_paymentMethod__2WiWs"
         />
       </div>
     </div>
 
     <hr
+      class="footer-separator"
       style="
         background-color: rgb(136, 136, 136);
         height: 0.25px;
-        margin: 60px 0 40px;
         border: none;
       "
     />
@@ -360,3 +360,15 @@ import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 const currentYear = new Date().getFullYear();
 </script>
+
+<style scoped>
+.footer-separator {
+  margin: 32px 0 24px;
+}
+
+@media (min-width: 768px) {
+  .footer-separator {
+    margin: 60px 0 40px;
+  }
+}
+</style>

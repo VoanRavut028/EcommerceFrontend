@@ -1,3 +1,8 @@
+import {
+  isValidPhoneNumber,
+  parsePhoneNumberFromString,
+} from "libphonenumber-js";
+
 export const emailValidate = (email: string): boolean => {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email.trim());
@@ -29,10 +34,10 @@ export const validateRegister = (payload: {
     errors.name = "Please enter your first and last name.";
   }
   if (!emailValidate(payload.email)) {
-    errors.email = "Please enter a valid email.";
+    errors.email = "Must be a valid email";
   }
   if (!passwordValidate(payload.password)) {
-    errors.password = "Password must be at least 8 characters.";
+    errors.password = "Password must be at least 8 characters";
   }
 
   return {
@@ -48,7 +53,7 @@ export const validateLogin = (payload: { email: string; password: string }) => {
   };
 
   if (!emailValidate(payload.email)) {
-    errors.email = "Please enter a valid email.";
+    errors.email = "Must be a valid email";
   }
   if (!passwordValidate(payload.password)) {
     errors.password = "Password must be at least 8 characters.";
@@ -61,20 +66,18 @@ export const validateLogin = (payload: { email: string; password: string }) => {
 };
 
 export const normalizePhone = (raw: string, defaultCountryCode = "+855") => {
-  const code = defaultCountryCode.replace(/\D/g, "");
-  let digits = raw.replace(/[\s\-().]/g, "").replace(/\D/g, "");
-
-  // Country code present with a "0" national prefix (e.g. 855012345678)
-  if (digits.startsWith(`${code}0`)) {
-    digits = `${code}${digits.slice(code.length + 1)}`;
-  } else if (digits.startsWith("0")) {
-    digits = digits.slice(1);
+  const value = raw.trim();
+  if (value.startsWith("+")) {
+    return parsePhoneNumberFromString(value)?.number ?? "";
   }
 
-  // Caller already included the country code: don't prepend it again
-  if (digits.startsWith(code)) {
-    return `+${digits}`;
-  }
-
-  return `+${code}${digits}`;
+  const digits = value.replace(/\D/g, "").replace(/^0/, "");
+  return (
+    parsePhoneNumberFromString(`${defaultCountryCode}${digits}`)?.number ?? ""
+  );
 };
+
+export const phoneValidate = (
+  phone: string,
+  defaultCountry: "KH" | "US" | "GB" = "KH",
+) => isValidPhoneNumber(phone.trim(), defaultCountry);

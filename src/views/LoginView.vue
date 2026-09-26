@@ -1,9 +1,118 @@
+<script setup lang="ts">
+import { validateLogin } from "@/composables/loginValidate";
+import { ref, onMounted } from "vue";
+import { useAuthStore } from "@/stores/auth";
+import { useI18n } from "vue-i18n";
+import { normalizePhone } from "@/composables/registerValidate";
+import CountryCodePicker from "@/components/CountryCodePicker.vue";
+const { t } = useI18n();
+const authStore = useAuthStore();
+const registrationSuccess = ref(false);
+const message = ref("");
+onMounted(() => {
+  if (authStore.registrationSuccess) {
+    registrationSuccess.value = true;
+    authStore.clearRegistrationSuccess();
+  }
+});
+const phone = ref("");
+const countryCode = ref("+855");
+const password = ref("");
+const errors = ref({ phone: "", password: "" });
+
+// const handleLoginWithCredentail = async () => {
+//   const normalizedPhone = normalizePhone(phone.value, countryCode.value);
+
+//   const result = validateLogin(
+//     {
+//       phone: normalizedPhone,
+//       password: password.value,
+//     },
+//     {
+//       phoneInvalid: t("auth.validation.phoneInvalid"),
+//       passwordRequired: t("auth.validation.passwordRequired"),
+//     },
+//   );
+
+//   errors.value = result.errors;
+
+//   if (!result.valid) return;
+
+//   try {
+//     const errCode = await authStore.loginWithCredentials(
+//       normalizedPhone,
+//       password.value,
+//     );
+
+//     const code = errCode;
+
+//     message.value = t(`error.${code}`);
+
+//     emit("close", false);
+//   } catch (error: any) {
+//     message.value = t(`error.${error}`);
+//     console.error("Login failed:", error);
+//   }
+// };
+
+const handleLoginWithCredentail = async () => {
+  message.value = "";
+
+  const normalizedPhone = normalizePhone(phone.value, countryCode.value);
+
+  const result = validateLogin({
+    phone: normalizedPhone,
+    password: password.value,
+  });
+
+  errors.value = result.errors;
+
+  if (!result.valid) return;
+
+  try {
+    const loginMessage = await authStore.loginWithCredentials(
+      normalizedPhone,
+      password.value,
+    );
+
+    message.value = loginMessage ?? "";
+    if (loginMessage !== 200) {
+      message.value = t("error.AUTH_INVALID_CREDENTIALS");
+      return;
+    }
+    emit("close", false);
+  } catch (err: any) {
+    message.value = err.message || "Login failed";
+  }
+};
+const emit = defineEmits<{
+  close: [value: boolean];
+  openRegister: [value: boolean];
+  openForgotPassword: [];
+}>();
+const handleClosePopup = () => {
+  emit("close", false);
+};
+
+const switchToRegister = () => {
+  emit("openRegister", true);
+};
+
+const switchToForgotPassword = () => {
+  emit("openForgotPassword");
+};
+</script>
+
 <template>
-  <div class="flex items-center flex-col justify-center bg-slate-50 px-10">
-    <div class="w-md h-fit bg-white shadow-lg !p-10 relative">
+  <div
+    class="flex items-center flex-col justify-center bg-slate-50 px-4 sm:px-10"
+  >
+    <div
+      class="w-full max-w-md sm:w-md h-fit bg-white shadow-lg !p-6 sm:!p-10 relative"
+    >
       <button
         @click="handleClosePopup"
-        class="absolute !top-3 !right-3 text-black hover:text-white cursor-pointer hover:bg-black hover:rounded-full !p-3"
+        class="absolute !top-3 !right-3 text-black hover:text-white cursor-pointer hover:bg-black !p-3"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -39,20 +148,23 @@
 
       <!-- Form -->
       <form class="space-y-5" @submit.prevent="handleLoginWithCredentail">
-        <!-- Email -->
+        <!-- phone -->
         <div class=" ">
           <label class="block text-sm font-medium text-gray-700">
-            {{ t("auth.email") }}
+            {{ t("auth.phone") }}
           </label>
-          <input
-            v-model="email"
-            type="email"
-            autocomplete="username"
-            :placeholder="t('auth.enterEmail')"
-            class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
-          />
-          <p v-if="errors.email" class="text-sm text-red-500 mt-1">
-            {{ errors.email }}
+          <div class="flex gap-3">
+            <CountryCodePicker v-model="countryCode" />
+            <input
+              v-model="phone"
+              type="tel"
+              autocomplete="tel"
+              :placeholder="t('auth.enterPhone')"
+              class="h-10 min-w-0 flex-1 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
+            />
+          </div>
+          <p v-if="errors.phone" class="text-sm text-red-500 mt-1">
+            {{ errors.phone }}
           </p>
         </div>
 
@@ -72,13 +184,17 @@
           <p v-if="errors.password" class="text-sm text-red-500 mt-1">
             {{ errors.password }}
           </p>
+          <p v-if="message" class="text-sm text-red-500 mt-1">
+            {{ message }}
+          </p>
         </div>
 
         <!-- Forgot Password -->
         <div>
           <button
             type="button"
-            class="text-sm font-semibold text-slate-900 hover:underline hover:cursor-pointer"
+            @click="switchToForgotPassword"
+            class="text-sm font-semibold text-slate-900 hover:underline cursor-pointer"
           >
             {{ t("auth.forgotPassword") }}
           </button>
@@ -87,10 +203,10 @@
         <!-- Login Button -->
         <button
           type="submit"
-          class="w-full h-10 rounded-xl bg-slate-950 text-white font-semibold hover:opacity-90 transition"
+          class="w-full h-10 bg-slate-950 text-white font-semibold hover:opacity-90 transition"
         >
           <svg
-            v-if="isLoading"
+            v-if="authStore.isLoading"
             class="animate-spin h-5 w-5 text-white"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -110,7 +226,9 @@
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
             ></path>
           </svg>
-          <span>{{ isLoading ? t("auth.loggingIn") : t("auth.login") }}</span>
+          <span>{{
+            authStore.isLoading ? t("auth.loggingIn") : t("auth.login")
+          }}</span>
         </button>
       </form>
 
@@ -118,8 +236,8 @@
       <div class="!mt-5 !space-y-5">
         <!-- Google -->
         <button
-          @click="loginWithProvider('google')"
-          class="w-full cursor-pointer h-10 border border-gray-300 rounded-xl flex items-center justify-center gap-3 font-medium text-gray-700 hover:bg-gray-50 transition"
+          @click="authStore.loginWithProvider('google')"
+          class="w-full cursor-pointer h-10 border border-gray-300 flex items-center justify-center gap-3 font-medium text-gray-700 hover:bg-gray-50 transition"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -149,8 +267,8 @@
 
         <!-- GitHub -->
         <button
-          @click="loginWithProvider('github')"
-          class="w-full cursor-pointer h-10 border border-gray-300 rounded-xl flex items-center justify-center gap-3 font-medium text-gray-700 hover:bg-gray-50 transition"
+          @click="authStore.loginWithProvider('github')"
+          class="w-full cursor-pointer h-10 border border-gray-300 flex items-center justify-center gap-3 font-medium text-gray-700 hover:bg-gray-50 transition"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -180,55 +298,3 @@
     </div>
   </div>
 </template>
-<script setup lang="ts">
-import { useAuth } from "@/composables/useAuth";
-import { validateLogin } from "@/composables/loginValidate";
-import { ref, onMounted } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import { useI18n } from "vue-i18n";
-const { loginWithProvider, loginWithCredentials, isLoading } = useAuth();
-const { t } = useI18n();
-const authStore = useAuthStore();
-const registrationSuccess = ref(false);
-
-onMounted(() => {
-  if (authStore.registrationSuccess) {
-    registrationSuccess.value = true;
-    authStore.clearRegistrationSuccess();
-  }
-});
-const email = ref("");
-const password = ref("");
-const errors = ref({ email: "", password: "" });
-
-const handleLoginWithCredentail = async () => {
-  const result = validateLogin({
-    email: email.value,
-    password: password.value,
-  });
-
-  errors.value = result.errors;
-  if (!result.valid) return;
-
-  try {
-    await loginWithCredentials(email.value, password.value);
-    emit("close", false);
-  } catch (err: any) {
-    console.error(err);
-  } finally {
-    console.log(`Loading state ${isLoading}`);
-  }
-};
-
-const emit = defineEmits<{
-  close: [value: boolean];
-  openRegister: [value: boolean];
-}>();
-const handleClosePopup = () => {
-  emit("close", false);
-};
-
-const switchToRegister = () => {
-  emit("openRegister", true);
-};
-</script>

@@ -31,12 +31,15 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-8">
+  <div class="p-4 sm:p-8">
     <div v-if="user">
       <h1 class="text-xl font-bold">Welcome, {{ user.name }}</h1>
-      <pre class="mt-4 bg-gray-100 p-4 rounded text-sm">{{
+      <pre
+        class="mt-4 bg-gray-100 p-4 rounded text-xs sm:text-sm overflow-x-auto"
+        >{{
         JSON.stringify(user, null, 2)
-      }}</pre>
+      }}</pre
+      >
     </div>
     <p v-else-if="error" class="text-red-500">{{ error }}</p>
     <p v-else class="text-gray-400">Loading...</p>

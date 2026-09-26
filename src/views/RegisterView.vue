@@ -1,25 +1,27 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAuthStore } from "@/stores/auth";
 import { auth } from "@/firebase/index";
 import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
-import { normalizePhone } from "@/composables/registerValidate";
+import { normalizePhone, phoneValidate } from "@/composables/registerValidate";
+import CountryCodePicker from "@/components/CountryCodePicker.vue";
 const { t } = useI18n();
 const useStore = useAuthStore();
 let confirmationResult: any = null;
 let recaptchaVerifier: any = null;
+const messageFromRegisterInit = ref("");
 const steps = [
   { id: 1, label: "Basic Info" },
   { id: 2, label: "Verify" },
   { id: 3, label: "Password" },
 ];
 
-const form = reactive({
+const form = ref({
   firstName: "",
   lastName: "",
   email: "",
-  countryCode: "",
+  countryCode: "+855",
   phone: "",
   otp: "",
   password: "",
@@ -32,7 +34,7 @@ const otpError = ref("");
 const resendCooldown = ref(30);
 const isComplete = ref(false);
 
-const errors = reactive({
+const errors = ref({
   firstName: "",
   lastName: "",
   email: "",
@@ -70,7 +72,7 @@ const submitLabel = computed(() => {
 });
 
 const passwordStrength = computed(() => {
-  const value = form.password || "";
+  const value = form.value.password || "";
   let score = 0;
 
   if (value.length >= 8) score += 1;
@@ -132,13 +134,17 @@ const switchToLogin = () => {
   emit("openLogin", false);
 };
 
+const handleSocialSignup = (provider: "google" | "github") => {
+  window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
+};
+
 const clearStepErrors = () => {
-  errors.firstName = "";
-  errors.lastName = "";
-  errors.email = "";
-  errors.phone = "";
-  errors.password = "";
-  errors.confirmPassword = "";
+  errors.value.firstName = "";
+  errors.value.lastName = "";
+  errors.value.email = "";
+  errors.value.phone = "";
+  errors.value.password = "";
+  errors.value.confirmPassword = "";
   otpError.value = "";
 };
 
@@ -146,35 +152,36 @@ const validateStepOne = () => {
   clearStepErrors();
   let valid = true;
 
-  if (!form.firstName.trim()) {
-    errors.firstName = t("registerFlow.validation.firstNameRequired");
+  if (!form.value.firstName.trim()) {
+    errors.value.firstName = t("registerFlow.validation.firstNameRequired");
     valid = false;
   }
 
-  if (!form.lastName.trim()) {
-    errors.lastName = t("registerFlow.validation.lastNameRequired");
+  if (!form.value.lastName.trim()) {
+    errors.value.lastName = t("registerFlow.validation.lastNameRequired");
     valid = false;
   }
 
-  if (!form.email.trim()) {
-    errors.email = t("registerFlow.validation.emailRequired");
+  if (!form.value.email.trim()) {
+    errors.value.email = t("registerFlow.validation.emailRequired");
     valid = false;
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = t("registerFlow.validation.emailInvalid");
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email)) {
+    errors.value.email = t("registerFlow.validation.emailInvalid");
     valid = false;
   }
 
-  if (!form.phone.trim()) {
-    errors.phone = t("registerFlow.validation.phoneRequired");
+  if (!form.value.phone.trim()) {
+    errors.value.phone = t("registerFlow.validation.phoneRequired");
     valid = false;
   } else {
-    const normalizedPhone = normalizePhone(form.phone);
+    const normalizedPhone = normalizePhone(
+      form.value.phone,
+      form.value.countryCode,
+    );
 
-    if (!/^\+[1-9]\d{7,14}$/.test(normalizedPhone)) {
-      errors.phone = t("registerFlow.validation.phoneInvalid");
+    if (!normalizedPhone || !phoneValidate(normalizedPhone)) {
+      errors.value.phone = t("registerFlow.validation.phoneInvalid");
       valid = false;
-    } else {
-      form.phone = normalizedPhone;
     }
   }
 
@@ -184,7 +191,7 @@ const validateStepOne = () => {
 const validateStepTwo = () => {
   otpError.value = "";
 
-  if (!/^[0-9]{6}$/.test(form.otp.trim())) {
+  if (!/^[0-9]{6}$/.test(form.value.otp.trim())) {
     otpError.value = t("registerFlow.validation.otpRequired");
     return false;
   }
@@ -196,21 +203,23 @@ const validateStepThree = () => {
   clearStepErrors();
   let valid = true;
 
-  if (!form.password) {
-    errors.password = t("registerFlow.validation.passwordRequired");
+  if (!form.value.password) {
+    errors.value.password = t("registerFlow.validation.passwordRequired");
     valid = false;
-  } else if (form.password.length < 8) {
-    errors.password = t("registerFlow.validation.passwordMinLength");
+  } else if (form.value.password.length < 8) {
+    errors.value.password = t("registerFlow.validation.passwordMinLength");
     valid = false;
   }
 
-  if (!form.confirmPassword) {
-    errors.confirmPassword = t(
+  if (!form.value.confirmPassword) {
+    errors.value.confirmPassword = t(
       "registerFlow.validation.confirmPasswordRequired",
     );
     valid = false;
-  } else if (form.confirmPassword !== form.password) {
-    errors.confirmPassword = t("registerFlow.validation.passwordsDoNotMatch");
+  } else if (form.value.confirmPassword !== form.value.password) {
+    errors.value.confirmPassword = t(
+      "registerFlow.validation.passwordsDoNotMatch",
+    );
     valid = false;
   }
 
@@ -225,15 +234,24 @@ const handleStepSubmit = async () => {
     isSubmitting.value = true;
 
     try {
-      await useStore.signupInit(
-        form.firstName,
-        form.lastName,
-        form.email,
-        form.phone,
+      const normalizedPhone = normalizePhone(
+        form.value.phone,
+        form.value.countryCode,
       );
+      const message = await useStore.signupInit(
+        form.value.firstName,
+        form.value.lastName,
+        form.value.email,
+        normalizedPhone,
+      );
+      messageFromRegisterInit.value = message;
+      if (message.status !== 201) {
+        messageFromRegisterInit.value = message;
+        return;
+      }
       confirmationResult = await signInWithPhoneNumber(
         auth,
-        form.phone,
+        normalizedPhone,
         recaptchaVerifier,
       );
       currentStep.value = 2;
@@ -253,10 +271,17 @@ const handleStepSubmit = async () => {
     isSubmitting.value = true;
 
     try {
-      const userCredential = await confirmationResult.confirm(form.otp);
+      const userCredential = await confirmationResult.confirm(form.value.otp);
       const idToken = await userCredential.user.getIdToken();
+      const normalizedPhone = normalizePhone(
+        form.value.phone,
+        form.value.countryCode,
+      );
 
-      const response = await useStore.signupVerifyOtp(idToken, form.phone);
+      const response = await useStore.signupVerifyOtp(
+        idToken,
+        normalizedPhone,
+      );
 
       registrationTicket.value = response.data.registrationTicket;
 
@@ -276,7 +301,7 @@ const handleStepSubmit = async () => {
   try {
     await useStore.signupComplete(
       registrationTicket.value,
-      form.password,
+      form.value.password,
     );
     isComplete.value = true;
   } catch (err) {
@@ -309,18 +334,22 @@ const resendCode = async () => {
   if (resendCooldown.value > 0) return;
 
   otpError.value = "";
-  form.otp = "";
+  form.value.otp = "";
   await new Promise((resolve) => setTimeout(resolve, 250));
   startResendCooldown();
 };
 </script>
 <template>
-  <div class="flex items-center flex-col justify-center bg-slate-50 px-10">
-    <div class="w-md h-fit bg-white shadow-lg !p-10 relative text-black">
+  <div
+    class="flex items-center flex-col justify-center bg-slate-50 px-4 sm:px-10"
+  >
+    <div
+      class="w-full max-w-md sm:w-md h-fit bg-white shadow-lg !p-6 sm:!p-10 relative"
+    >
       <button
         type="button"
         @click="handleClosePopup"
-        class="absolute right-4 top-4 p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+        class="absolute !top-3 !right-3 text-black hover:text-white cursor-pointer hover:bg-black !p-3"
         :aria-label="t('registerFlow.close')"
       >
         <svg
@@ -360,26 +389,26 @@ const resendCode = async () => {
           </svg>
         </div>
 
-        <h2 class="text-2xl font-bold text-slate-900">
+        <h2 class="text-3xl font-bold text-slate-900 !pt-1">
           {{ t("registerFlow.successTitle") }}
         </h2>
-        <p class="mt-2 max-w-sm text-sm text-slate-600">
+        <p class="max-w-sm text-sm text-gray-500 !py-4">
           {{ t("registerFlow.successSubtitle") }}
         </p>
 
         <button
           type="button"
           @click="switchToLogin"
-          class="mt-6 w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+          class="mt-6 w-full h-10 bg-slate-950 text-white font-semibold hover:opacity-90 transition"
         >
           {{ t("registerFlow.goToLogin") }}
         </button>
       </div>
 
       <div v-else>
-        <div class="mb-6 pt-8">
+        <div class="!pt-1">
           <div
-            class="mb-4 flex items-center justify-between text-xs font-medium uppercase tracking-[0.2em] text-slate-400"
+            class="mb-4 flex items-center justify-between text-sm font-medium text-gray-500"
           >
             <span>{{ t("registerFlow.accountSetup") }}</span>
             <span>{{ currentStep }}/3</span>
@@ -398,114 +427,111 @@ const resendCode = async () => {
         </div>
 
         <header class="mb-6">
-          <p class="text-sm font-medium text-slate-500">
+          <p class="text-sm font-medium text-gray-500">
             {{ t("registerFlow.stepLabel") }} {{ currentStep }}
           </p>
-          <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+          <h1 class="text-3xl font-bold text-slate-900 !pt-1">
             {{ stepTitle }}
           </h1>
-          <p class="mt-2 text-sm text-slate-500">
+          <p class="text-gray-500 !py-4">
             {{ stepSubtitle }}
           </p>
         </header>
 
         <form @submit.prevent="handleStepSubmit" novalidate>
-          <div v-if="currentStep === 1" class="space-y-4">
+          <div v-if="currentStep === 1" class="space-y-5">
             <div class="grid gap-4 sm:grid-cols-2">
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-slate-700">
+                <label class="block text-sm font-medium text-gray-700">
                   {{ t("registerFlow.firstName") }}
                 </label>
                 <input
                   v-model="form.firstName"
                   type="text"
                   :placeholder="t('registerFlow.firstNamePlaceholder')"
-                  class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
+                  class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
                   :class="{ 'border-red-300': errors.firstName }"
                 />
-                <p v-if="errors.firstName" class="mt-1 text-xs text-red-500">
+                <p v-if="errors.firstName" class="text-sm text-red-500 mt-1">
                   {{ errors.firstName }}
                 </p>
               </div>
 
               <div>
-                <label class="mb-1.5 block text-sm font-medium text-slate-700">
+                <label class="block text-sm font-medium text-gray-700">
                   {{ t("registerFlow.lastName") }}
                 </label>
                 <input
                   v-model="form.lastName"
                   type="text"
                   :placeholder="t('registerFlow.lastNamePlaceholder')"
-                  class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
+                  class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
                   :class="{ 'border-red-300': errors.lastName }"
                 />
-                <p v-if="errors.lastName" class="mt-1 text-xs text-red-500">
+                <p v-if="errors.lastName" class="text-sm text-red-500 mt-1">
                   {{ errors.lastName }}
                 </p>
               </div>
             </div>
 
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-slate-700">
+              <label class="block text-sm font-medium text-gray-700">
                 {{ t("registerFlow.email") }}
               </label>
               <input
                 v-model="form.email"
                 type="email"
                 :placeholder="t('registerFlow.emailPlaceholder')"
-                class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
+                class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
                 :class="{ 'border-red-300': errors.email }"
               />
-              <p v-if="errors.email" class="mt-1 text-xs text-red-500">
+              <p v-if="errors.email" class="text-sm text-red-500 mt-1">
                 {{ errors.email }}
               </p>
             </div>
 
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-slate-700">
+              <label class="block text-sm font-medium text-gray-700">
                 {{ t("registerFlow.phoneNumber") }}
               </label>
               <div class="flex gap-3">
-                <!-- <select
-                  v-model="form.countryCode"
-                  class="h-11 w-24 rounded-xl border border-slate-200 bg-slate-50 px-2 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
-                >
-                  <option
-                    v-for="option in countryCodes"
-                    :key="option.value"
-                    :value="option.value"
-                  >
-                    {{ option.label }}
-                  </option>
-                </select> -->
+                <CountryCodePicker v-model="form.countryCode" />
 
                 <input
                   v-model="form.phone"
                   type="tel"
                   :placeholder="t('registerFlow.phonePlaceholder')"
-                  class="h-11 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
+                  class="h-10 flex-1 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
                   :class="{ 'border-red-300': errors.phone }"
                 />
               </div>
-              <p v-if="errors.phone" class="mt-1 text-xs text-red-500">
+              <p v-if="errors.phone" class="text-sm text-red-500 mt-1">
                 {{ errors.phone }}
+              </p>
+              <p
+                v-if="messageFromRegisterInit"
+                class="text-sm text-red-500 mt-1"
+              >
+                {{ messageFromRegisterInit }}
               </p>
             </div>
           </div>
 
           <div v-else-if="currentStep === 2" class="space-y-5">
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p class="text-xs uppercase tracking-[0.2em] text-slate-400">
+            <div
+              class="mb-4 rounded-lg border border-gray-300 bg-gray-50 p-3 text-sm"
+            >
+              <p class="text-sm font-medium text-gray-700">
                 {{ t("registerFlow.verificationSentTo") }}
               </p>
               <div class="mt-2 flex items-center justify-between gap-3">
                 <p class="text-base font-semibold text-slate-900">
-                  {{ form.countryCode }} {{ form.phone }}
+                  {{ form.phone }}
                 </p>
                 <button
                   type="button"
                   @click="goToStep(1)"
-                  class="text-sm font-medium text-slate-700 underline-offset-4 hover:underline"
+                  class="font-semibold text-slate-900 hover:underline"
                 >
                   {{ t("registerFlow.edit") }}
                 </button>
@@ -513,7 +539,7 @@ const resendCode = async () => {
             </div>
 
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-slate-700">
+              <label class="block text-sm font-medium text-gray-700">
                 {{ t("registerFlow.otpLabel") }}
               </label>
               <input
@@ -522,23 +548,23 @@ const resendCode = async () => {
                 inputmode="numeric"
                 maxlength="6"
                 placeholder="123456"
-                class="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-center text-lg font-semibold tracking-[0.5em] outline-none transition focus:border-slate-400 focus:bg-white"
+                class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3 text-center text-lg font-semibold tracking-[0.5em]"
                 :class="{ 'border-red-300': otpError }"
               />
-              <p v-if="otpError" class="mt-2 text-xs text-red-500">
+              <p v-if="otpError" class="text-sm text-red-500 mt-2">
                 {{ otpError }}
               </p>
             </div>
 
             <div class="flex items-center justify-between text-sm">
-              <span class="text-slate-500">{{
+              <span class="text-gray-500">{{
                 t("registerFlow.noCodeQuestion")
               }}</span>
               <button
                 type="button"
                 :disabled="resendCooldown > 0"
                 @click="resendCode"
-                class="font-medium text-slate-900 disabled:cursor-not-allowed disabled:text-slate-400"
+                class="font-semibold text-slate-900 disabled:cursor-not-allowed disabled:text-slate-400"
               >
                 {{
                   resendCooldown > 0
@@ -549,45 +575,45 @@ const resendCode = async () => {
             </div>
           </div>
 
-          <div v-else class="space-y-4">
+          <div v-else class="space-y-5">
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-slate-700">
+              <label class="block text-sm font-medium text-gray-700">
                 {{ t("registerFlow.password") }}
               </label>
               <input
                 v-model="form.password"
                 type="password"
                 :placeholder="t('registerFlow.passwordPlaceholder')"
-                class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
+                class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
                 :class="{ 'border-red-300': errors.password }"
               />
-              <p v-if="errors.password" class="mt-1 text-xs text-red-500">
+              <p v-if="errors.password" class="text-sm text-red-500 mt-1">
                 {{ errors.password }}
               </p>
             </div>
 
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-slate-700">
+              <label class="block text-sm font-medium text-gray-700">
                 {{ t("registerFlow.confirmPassword") }}
               </label>
               <input
                 v-model="form.confirmPassword"
                 type="password"
                 :placeholder="t('registerFlow.confirmPasswordPlaceholder')"
-                class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none transition focus:border-slate-400 focus:bg-white"
+                class="w-full h-10 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
                 :class="{ 'border-red-300': errors.confirmPassword }"
               />
               <p
                 v-if="errors.confirmPassword"
-                class="mt-1 text-xs text-red-500"
+                class="text-sm text-red-500 mt-1"
               >
                 {{ errors.confirmPassword }}
               </p>
             </div>
 
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div class="rounded-lg border border-gray-300 bg-gray-50 p-3">
               <div
-                class="mb-2 flex items-center justify-between text-xs text-slate-500"
+                class="mb-2 flex items-center justify-between text-sm text-gray-500"
               >
                 <span>{{ t("registerFlow.passwordStrength") }}</span>
                 <span class="font-medium" :class="strengthColor">
@@ -608,12 +634,12 @@ const resendCode = async () => {
           </div>
 
           <div class="mt-6 flex flex-col items-center gap-3">
-            <div class="flex flex-row gap-[50%] justify-center">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
               <button
                 v-if="currentStep > 1"
                 type="button"
                 @click="goBack"
-                class="h-11 flex-1 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                class="h-10 w-full sm:flex-1 bg-slate-950 text-white font-semibold hover:opacity-90 transition disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {{ t("registerFlow.back") }}
               </button>
@@ -621,7 +647,7 @@ const resendCode = async () => {
               <button
                 type="submit"
                 :disabled="isSubmitting"
-                class="h-11 flex-1 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                class="h-10 w-full sm:flex-1 bg-slate-950 text-white font-semibold hover:opacity-90 transition disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <span
                   v-if="isSubmitting"
@@ -661,19 +687,17 @@ const resendCode = async () => {
 
         <div class="mt-6 space-y-3">
           <div class="relative flex items-center justify-center">
-            <div class="h-px flex-1 bg-slate-200"></div>
-            <span
-              class="px-3 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400"
-            >
+            <div class="h-px flex-1 bg-gray-300"></div>
+            <span class="px-3 text-sm font-medium text-gray-500">
               {{ t("registerFlow.socialDivider") }}
             </span>
-            <div class="h-px flex-1 bg-slate-200"></div>
+            <div class="h-px flex-1 bg-gray-300"></div>
           </div>
 
           <button
             type="button"
             @click="handleSocialSignup('google')"
-            class="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            class="w-full cursor-pointer h-10 border border-gray-300 flex items-center justify-center gap-3 font-medium text-gray-700 hover:bg-gray-50 transition"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -703,7 +727,7 @@ const resendCode = async () => {
           <button
             type="button"
             @click="handleSocialSignup('github')"
-            class="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            class="w-full cursor-pointer h-10 border border-gray-300 flex items-center justify-center gap-3 font-medium text-gray-700 hover:bg-gray-50 transition"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -719,7 +743,7 @@ const resendCode = async () => {
           </button>
         </div>
 
-        <div class="mt-5 text-center text-sm text-slate-500">
+        <div class="!mt-5 text-center text-sm text-gray-500">
           {{ t("registerFlow.haveAccount") }}
           <button
             type="button"

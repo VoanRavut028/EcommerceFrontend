@@ -22,9 +22,9 @@ const prop = defineProps({
   >
     <div
       v-if="open"
-      class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50 px-4"
+      class="fixed inset-0 z-[2000] flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-4"
     >
-      <div class="h-fit max-w-sm">
+      <div class="h-fit w-full max-w-md my-auto">
         <div>
           <slot></slot>
         </div>

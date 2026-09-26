@@ -11,11 +11,22 @@ const routes = [
     path: "/index",
     component: () => import("@/views/HomePage.vue"),
   },
+  // {
+  //   path: "/login",
+  //   name: "login",
+  //   component: () => import("@/views/LoginView.vue"),
+  //   meta: { guestOnly: true },
+  // },
+  // {
+  //   path: "/forgot-password",
+  //   name: "forgot-password",
+  //   component: () => import("@/views/ForgotPasswordView.vue"),
+  //   meta: { guestOnly: true },
+  // },
   {
-    path: "/login",
-    name: "login",
-    component: () => import("@/views/LoginView.vue"),
-    meta: { guestOnly: true },
+    path: "/forgot-password",
+    name: "forgot-password",
+    component: () => import("@/views/ForgotPasswordView.vue"),
   },
   {
     path: "/callbackview",
@@ -73,14 +84,11 @@ const initAuth = async () => {
   if (authInit) return authInit;
 
   const authStore = useAuthStore();
-  authInit = (async () => {
-    try {
-      await authStore.initializeAuth();
-      console.log(`Auth user is : ${authStore.user}`);
-    } catch (error) {
-      console.log("auth init failed:", error);
-    }
-  })();
+  authInit = authStore.initializeAuth().catch(() => {
+    // No session (e.g. refresh token expired): the auth guard below
+    // redirects protected routes to /login.
+    authInit = null;
+  });
 
   return authInit;
 };
@@ -97,7 +105,7 @@ router.beforeEach(async (to, from, next) => {
     authStore.isAuthenticated || tokenStore.get() !== null;
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next("/index");
+    next("/login");
   } else if (to.meta.guestOnly && isAuthenticated) {
     next("/index");
   } else {

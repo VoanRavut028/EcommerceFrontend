@@ -2,15 +2,10 @@ import axios from "axios";
 import { tokenStore } from "./tokenStore.ts";
 import type {
   AxiosInstance,
-  AxiosRequestConfig,
   InternalAxiosRequestConfig,
   AxiosError,
 } from "axios";
 import { useAuthStore } from "@/stores/auth.ts";
-interface QueuedRequest {
-  resolve: (token: string) => void;
-  reject: (error: unknown) => void;
-}
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -21,61 +16,96 @@ const api: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+function readExp(token: string): number | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const json = JSON.parse(
+      atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
+    );
+    return typeof json.exp === "number" ? json.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+let refreshInFlight: Promise<string> | null = null;
+
+function silentRefresh(): Promise<string> {
+  if (refreshInFlight) return refreshInFlight;
+
+  const authStore = useAuthStore();
+  refreshInFlight = authStore
+    .refreshToken()
+    .finally(() => {
+      refreshInFlight = null;
+    });
+
+  return refreshInFlight;
+}
+
+function isPublicEndpoint(url: string): boolean {
+  return ["/login", "/register", "/refresh", "/logout"].some((p) =>
+    url.includes(p),
+  );
+}
+
+api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   const authStore = useAuthStore();
   const token = tokenStore.get();
 
-  console.log(`Token is the intercepter : ${token}`);
   if (token) {
     authStore.isAuthenticated = true;
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  if (!token || isPublicEndpoint(config.url ?? "")) {
+    return config;
+  }
+
+  const exp = readExp(token);
+  if (exp === null || exp - Date.now() > 30_000) {
+    return config;
+  }
+
+  try {
+    const fresh = await silentRefresh();
+    config.headers.Authorization = `Bearer ${fresh}`;
+  } catch {
+  
+  }
+
   return config;
 });
 
-let isRefreshing = false;
-let refreshQueue: QueuedRequest[] = [];
-
 api.interceptors.response.use(
   (res) => res,
-  async (err: AxiosError) => {
+  (err: AxiosError) => {
     const original = err.config as CustomAxiosRequestConfig;
     const authStore = useAuthStore();
-    if (err.response?.status !== 401 || !original || original._retry) {
+
+    if (
+      err.response?.status !== 401 ||
+      !original ||
+      original._retry ||
+      isPublicEndpoint(original.url ?? "") ||
+      !original.headers?.Authorization
+    ) {
       return Promise.reject(err);
     }
 
-    if (isRefreshing) {
-      return new Promise<string>((resolve, reject) => {
-        refreshQueue.push({ resolve, reject });
-      }).then((token) => {
-        if (original.headers) {
-          original.headers.Authorization = `Bearer ${token}`;
-        }
-        return api(original);
-      });
-    }
-
     original._retry = true;
-    isRefreshing = true;
 
-    try {
-      const token = await authStore.refreshToken();
-      refreshQueue.forEach(({ resolve }) => resolve(token));
-      refreshQueue = [];
-      if (original.headers) {
+    return silentRefresh()
+      .then((token) => {
         original.headers.Authorization = `Bearer ${token}`;
-      }
-      return api(original);
-    } catch (refreshErr) {
-      refreshQueue.forEach(({ reject }) => reject(refreshErr));
-      refreshQueue = [];
-      authStore.clearSession();
-      tokenStore.clear();
-      return Promise.reject(refreshErr);
-    } finally {
-      isRefreshing = false;
-    }
+        return api(original);
+      })
+      .catch((refreshErr) => {
+        authStore.clearSession();
+        tokenStore.clear();
+        return Promise.reject(refreshErr);
+      });
   },
 );
 

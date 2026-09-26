@@ -1,8 +1,8 @@
-export const emailValidate = (email: string): boolean => {
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return emailRegex.test(email.trim());
-};
+import { isValidPhoneNumber } from "libphonenumber-js";
 
+export const phoneValidate = (phone: string): boolean => {
+  return isValidPhoneNumber(phone.trim(), "KH");
+};
 export const passwordValidate = (password: string): boolean => {
   return password.trim().length >= 8;
 };
@@ -23,15 +23,16 @@ export const validateRegister = (payload: {
     password: "",
   };
 
-  const fullName = `${payload.firstName.trim()} ${payload.lastName.trim()}`.trim();
+  const fullName =
+    `${payload.firstName.trim()} ${payload.lastName.trim()}`.trim();
   if (!nameValidate(fullName)) {
-    errors.name = "Please enter your first and last name.";
+    errors.name = "Please enter your first and last name";
   }
-  if (!emailValidate(payload.email)) {
-    errors.email = "Please enter a valid email.";
+  if (!phoneValidate(payload.email)) {
+    errors.email = "Must be a valid phone number";
   }
   if (!passwordValidate(payload.password)) {
-    errors.password = "Password must be at least 8 characters.";
+    errors.password = "Password must be at least 8 characters";
   }
 
   return {
@@ -40,21 +41,26 @@ export const validateRegister = (payload: {
   };
 };
 
-export const validateLogin = (payload: { email: string; password: string }) => {
+export const validateLogin = (
+  payload: { phone: string; password: string },
+  messages = {
+    phoneInvalid: "Must be a valid phone number",
+    passwordRequired: "Required",
+  },
+) => {
   const errors = {
-    email: "",
+    phone: "",
     password: "",
   };
-
-  if (!emailValidate(payload.email)) {
-    errors.email = "Please enter a valid email.";
-  }
-  if (!passwordValidate(payload.password)) {
-    errors.password = "Password must be at least 8 characters.";
+  if (!phoneValidate(payload.phone)) {
+    errors.phone = messages.phoneInvalid;
   }
 
+  if (!payload.password.trim()) {
+    errors.password = messages.passwordRequired;
+  }
   return {
-    valid: !errors.email && !errors.password,
+    valid: !errors.phone && !errors.password,
     errors,
   };
 };

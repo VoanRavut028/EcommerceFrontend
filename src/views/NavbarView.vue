@@ -3,6 +3,7 @@ import { ref, nextTick, watch } from "vue";
 import BaseModal from "@/components/BaseModal.vue";
 import LoginView from "./LoginView.vue";
 import RegisterView from "./RegisterView.vue";
+import ForgotPasswordView from "./ForgotPasswordView.vue";
 import LogoutModal from "./LogoutView.vue";
 import MobileNav from "@/components/MobileNav.vue";
 import ThemeToggle from "@/components/ThemeToggle.vue";
@@ -15,9 +16,11 @@ const authStore = useAuthStore();
 const showLogoutModal = ref(false);
 const openModal = ref(false);
 const openRegisterModal = ref(false);
+const openForgotPasswordModal = ref(false);
 const openLoginModal = () => {
   openModal.value = true;
   openRegisterModal.value = false;
+  openForgotPasswordModal.value = false;
   authStore.showAuthModal = true;
 };
 
@@ -30,12 +33,25 @@ const closeLoginModal = (val: boolean) => {
 const openRegisterModalOnly = () => {
   openRegisterModal.value = true;
   openModal.value = false;
+  openForgotPasswordModal.value = false;
   authStore.showAuthModal = true;
 };
 
 const closeRegisterModal = (val: boolean) => {
   openRegisterModal.value = val;
   authStore.showAuthModal = val;
+};
+
+const openForgotPasswordModalOnly = () => {
+  openForgotPasswordModal.value = true;
+  openModal.value = false;
+  openRegisterModal.value = false;
+  authStore.showAuthModal = true;
+};
+
+const closeForgotPasswordModal = () => {
+  openForgotPasswordModal.value = false;
+  authStore.showAuthModal = false;
 };
 
 watch(
@@ -89,6 +105,7 @@ function onClear() {
           <MobileNav
             @open-login="openLoginModal"
             @open-register="openRegisterModalOnly"
+            @open-forgot-password="openForgotPasswordModalOnly"
             @logout="handleLogout"
           />
         </div>
@@ -172,7 +189,7 @@ function onClear() {
           </p>
         </div>
         <!-- Right Side -->
-        <div class="flex items-center gap-6 not-odd: justify-self-end">
+        <div class="flex items-center gap-3 sm:gap-6 justify-self-end">
           <!-- Search -->
 
           <!-- Full search bar overlay, opens on click -->
@@ -256,7 +273,7 @@ function onClear() {
             <button
               type="button"
               @click="openSearch"
-              class="hover:text-accent transition-colors hover:cursor-pointer p-2 rounded-full"
+              class="hover:text-accent transition-colors hover:cursor-pointer p-2"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -264,7 +281,7 @@ function onClear() {
                 viewBox="0 0 24 24"
                 stroke-width="2"
                 stroke="currentColor"
-                class="w-6 h-6"
+                class="w-5 h-5 sm:w-6 sm:h-6"
               >
                 <path
                   stroke-linecap="round"
@@ -283,7 +300,7 @@ function onClear() {
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="w-6 h-6"
+                class="w-5 h-5 sm:w-6 sm:h-6"
               >
                 <path
                   stroke-linecap="round"
@@ -303,7 +320,7 @@ function onClear() {
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="w-6 h-6"
+                class="w-5 h-5 sm:w-6 sm:h-6"
               >
                 <path
                   stroke-linecap="round"
@@ -323,7 +340,7 @@ function onClear() {
                 viewBox="0 0 24 24"
                 stroke-width="1.5"
                 stroke="currentColor"
-                class="w-6 h-6"
+                class="w-5 h-5 sm:w-6 sm:h-6"
               >
                 <path
                   stroke-linecap="round"
@@ -332,7 +349,7 @@ function onClear() {
                 />
               </svg>
               <span
-                class="absolute -top-1 -right-1 bg-accent text-white text-[16px] font-bold px-1.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center"
+                class="absolute -top-1 -right-1 bg-accent text-white text-[10px] sm:text-[12px] font-bold px-1.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center"
               >
                 0
               </span>
@@ -436,6 +453,7 @@ function onClear() {
         v-if="openModal"
         @close="closeLoginModal"
         @open-register="openRegisterModalOnly"
+        @open-forgot-password="openForgotPasswordModalOnly"
       ></LoginView>
     </BaseModal>
 
@@ -445,6 +463,14 @@ function onClear() {
         @close="closeRegisterModal"
         @open-login="openLoginModal"
       ></RegisterView>
+    </BaseModal>
+
+    <BaseModal :open="openForgotPasswordModal">
+      <ForgotPasswordView
+        v-if="openForgotPasswordModal"
+        @close="closeForgotPasswordModal"
+        @open-login="openLoginModal"
+      />
     </BaseModal>
   </div>
 </template>

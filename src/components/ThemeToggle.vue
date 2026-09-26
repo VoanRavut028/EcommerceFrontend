@@ -13,7 +13,7 @@ onMounted(() => {
   <button
     @click="toggle"
     aria-label="Toggle dark mode"
-    class="flex items-center justify-center cursor-pointer rounded-full p-2 transition-colors dark:hover:!text-text dark:!bg-accent"
+    class="flex items-center justify-center cursor-pointer p-1.5 sm:p-2 transition-colors dark:hover:!text-text dark:!bg-accent"
   >
     <svg
       v-if="isDark"
@@ -22,7 +22,7 @@ onMounted(() => {
       viewBox="0 0 24 24"
       stroke-width="1.5"
       stroke="currentColor"
-      class="size-6"
+      class="size-5 sm:size-6"
     >
       <path
         stroke-linecap="round"
@@ -38,7 +38,7 @@ onMounted(() => {
       viewBox="0 0 24 24"
       stroke-width="1.7"
       stroke="currentColor"
-      class="h-5 w-5"
+      class="size-5 sm:size-6"
     >
       <path
         stroke-linecap="round"
