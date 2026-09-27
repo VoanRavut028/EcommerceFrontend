@@ -85,8 +85,6 @@ const initAuth = async () => {
 
   const authStore = useAuthStore();
   authInit = authStore.initializeAuth().catch(() => {
-    // No session (e.g. refresh token expired): the auth guard below
-    // redirects protected routes to /login.
     authInit = null;
   });
 
@@ -94,23 +92,13 @@ const initAuth = async () => {
 };
 
 router.beforeEach(async (to, from, next) => {
-  const authStore = useAuthStore();
 
   if (!bootstrapped) {
     bootstrapped = true;
     await initAuth();
   }
 
-  const isAuthenticated =
-    authStore.isAuthenticated || tokenStore.get() !== null;
-
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next("/login");
-  } else if (to.meta.guestOnly && isAuthenticated) {
-    next("/index");
-  } else {
-    next();
-  }
+  next();
 });
 
 export default router;

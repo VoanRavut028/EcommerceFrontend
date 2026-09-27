@@ -5,7 +5,8 @@ import { useAuthStore } from "@/stores/auth";
 import { useI18n } from "vue-i18n";
 import { normalizePhone } from "@/composables/registerValidate";
 import CountryCodePicker from "@/components/CountryCodePicker.vue";
-const { t } = useI18n();
+import { getAuthErrorCode } from "@/utils/authError";
+const { t, te } = useI18n();
 const authStore = useAuthStore();
 const registrationSuccess = ref(false);
 const message = ref("");
@@ -19,41 +20,6 @@ const phone = ref("");
 const countryCode = ref("+855");
 const password = ref("");
 const errors = ref({ phone: "", password: "" });
-
-// const handleLoginWithCredentail = async () => {
-//   const normalizedPhone = normalizePhone(phone.value, countryCode.value);
-
-//   const result = validateLogin(
-//     {
-//       phone: normalizedPhone,
-//       password: password.value,
-//     },
-//     {
-//       phoneInvalid: t("auth.validation.phoneInvalid"),
-//       passwordRequired: t("auth.validation.passwordRequired"),
-//     },
-//   );
-
-//   errors.value = result.errors;
-
-//   if (!result.valid) return;
-
-//   try {
-//     const errCode = await authStore.loginWithCredentials(
-//       normalizedPhone,
-//       password.value,
-//     );
-
-//     const code = errCode;
-
-//     message.value = t(`error.${code}`);
-
-//     emit("close", false);
-//   } catch (error: any) {
-//     message.value = t(`error.${error}`);
-//     console.error("Login failed:", error);
-//   }
-// };
 
 const handleLoginWithCredentail = async () => {
   message.value = "";
@@ -70,19 +36,24 @@ const handleLoginWithCredentail = async () => {
   if (!result.valid) return;
 
   try {
-    const loginMessage = await authStore.loginWithCredentials(
+    const code = await authStore.loginWithCredentials(
       normalizedPhone,
       password.value,
     );
 
-    message.value = loginMessage ?? "";
-    if (loginMessage !== 200) {
-      message.value = t("error.AUTH_INVALID_CREDENTIALS");
+    if (code !== "AUTH_LOGIN_SUCCESS") {
+      message.value = t("authMessages.login.AUTH_INVALID_CREDENTIALS");
       return;
     }
     emit("close", false);
-  } catch (err: any) {
-    message.value = err.message || "Login failed";
+  } catch (error: unknown) {
+    const code = getAuthErrorCode(error, "AUTH_INVALID_CREDENTIALS");
+    const messageKey = `authMessages.login.${code}`;
+    message.value = t(
+      te(messageKey)
+        ? messageKey
+        : "authMessages.login.AUTH_INVALID_CREDENTIALS",
+    );
   }
 };
 const emit = defineEmits<{
@@ -203,28 +174,30 @@ const switchToForgotPassword = () => {
         <!-- Login Button -->
         <button
           type="submit"
-          class="w-full h-10 bg-slate-950 text-white font-semibold hover:opacity-90 transition"
+          :disabled="authStore.isLoading"
+          class="flex h-10 w-full items-center justify-center gap-2 bg-slate-950 text-white font-semibold transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <svg
             v-if="authStore.isLoading"
-            class="animate-spin h-5 w-5 text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
+            class="h-4 w-4 animate-spin"
             viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
           >
             <circle
-              class="opacity-25"
               cx="12"
               cy="12"
               r="10"
               stroke="currentColor"
-              stroke-width="4"
-            ></circle>
+              stroke-width="3"
+              stroke-opacity="0.25"
+            />
             <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            ></path>
+              d="M20 12a8 8 0 10-8 8"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+            />
           </svg>
           <span>{{
             authStore.isLoading ? t("auth.loggingIn") : t("auth.login")

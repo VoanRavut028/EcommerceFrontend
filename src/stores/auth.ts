@@ -10,7 +10,6 @@ export const useAuthStore = defineStore("auth", () => {
   const isLoading = ref(false);
   const registrationSuccess = ref(false);
   const showAuthModal = ref(false);
-  const messageFromRegisterInit = ref("");
   const fullName = computed(() => {
     if (!user.value) return;
     return {
@@ -118,38 +117,10 @@ export const useAuthStore = defineStore("auth", () => {
     window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
   };
 
-  // const loginWithCredentials = async (
-  //   phone: string,
-  //   password: string,
-  // ): Promise<string | undefined> => {
-  //   try {
-  //     isLoading.value = true;
-  //     const res = await api.post("/login", {
-  //       phone,
-  //       password,
-  //     });
-
-  //     tokenStore.set(res.data.accessToken);
-  //     user.value = res.data.user;
-
-  //     isAuthenticated.value = true;
-  //     showAuthModal.value = false;
-  //     scheduleRefresh(res.data.accessToken);
-  //     console.log("All accessible browser cookies:", document.cookie);
-  //     return res.data.code;
-  //   } catch (error: any) {
-  //     const message = error.response?.data?.code || "Login failed";
-  //     console.log("Login error:", message);
-  //     return message;
-  //   } finally {
-  //     isLoading.value = false;
-  //   }
-  // };
-
   const loginWithCredentials = async (
     phone: string,
     password: string,
-  ): Promise<any> => {
+  ): Promise<string> => {
     try {
       isLoading.value = true;
 
@@ -158,6 +129,10 @@ export const useAuthStore = defineStore("auth", () => {
         password,
       });
 
+      if (typeof data.code !== "string") {
+        throw new Error("Login response is missing an authentication code");
+      }
+
       tokenStore.set(data.accessToken);
       user.value = data.user;
 
@@ -165,19 +140,7 @@ export const useAuthStore = defineStore("auth", () => {
       showAuthModal.value = false;
       scheduleRefresh(data.accessToken);
 
-      console.log("All accessible browser cookies:", document.cookie);
-
-      return {
-        message: data.code,
-        status: data.status,
-      };
-    } catch (error: any) {
-      const message = error.response?.data?.code || "Login failed";
-      console.log("Login error:", message);
-      return {
-        message,
-        status: error.response?.data?.status,
-      };
+      return data.code;
     } finally {
       isLoading.value = false;
     }
@@ -211,19 +174,19 @@ export const useAuthStore = defineStore("auth", () => {
     lastName: string,
     email: string,
     phoneNumber: string,
-  ) => {
-    try {
-      const message: string = await api.post("/register/init", {
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        phone_number: phoneNumber,
-      });
-      return (messageFromRegisterInit.value = message);
-    } catch (error: any) {
-      return (messageFromRegisterInit.value =
-        error.response?.data?.message || "Registration initiation failed");
+  ): Promise<string> => {
+    const { data } = await api.post("/register/init", {
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone_number: phoneNumber,
+    });
+
+    if (typeof data.code !== "string") {
+      throw new Error("Signup response is missing an authentication code");
     }
+
+    return data.code;
   };
 
   const signupVerifyOtp = (idToken: string, phone_number: string) =>
@@ -232,11 +195,21 @@ export const useAuthStore = defineStore("auth", () => {
       phone_number: phone_number,
     });
 
-  const signupComplete = (registrationTicket: string, password: string) =>
-    api.post("/register", {
+  const signupComplete = async (
+    registrationTicket: string,
+    password: string,
+  ): Promise<string> => {
+    const { data } = await api.post("/register", {
       registrationTicket: registrationTicket,
       password: password,
     });
+
+    if (typeof data.code !== "string") {
+      throw new Error("Registration response is missing an authentication code");
+    }
+
+    return data.code;
+  };
 
   const resetPasswordInit = (phone_number: string) =>
     api.post("/reset-password/init", { phone_number });

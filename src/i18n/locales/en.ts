@@ -191,8 +191,50 @@ export default {
     allRightsReserved: "All rights reserved",
     weAccept: "WE ACCEPT",
   },
-  error: {
-    AUTH_INVALID_CREDENTIALS: "Invalid phone number or password",
-    AUTH_SUCCESS_CREDENTIALS: "Login successful",
+  authMessages: {
+    signup: {
+      AUTH_USER_ALREADY_EXISTS: "This email or phone number is already in use",
+      AUTH_PENDING_SIGNUP_CREATED:
+        "Signup started successfully. Please verify your phone number",
+      AUTH_PENDING_SIGNUP_ERROR: "Unable to start signup. Please try again",
+      AUTH_PENDING_SIGNUP_NOT_FOUND:
+        "Signup session not found. Please start again",
+    },
+    phoneVerification: {
+      AUTH_INVALID_VERIFICATION_REQUEST:
+        "Please provide a valid verification request",
+      AUTH_PHONE_NUMBER_MISMATCH:
+        "The phone number does not match the verification",
+      AUTH_PHONE_VERIFIED: "Phone number verified successfully",
+      AUTH_VERIFICATION_SESSION_EXPIRED:
+        "Verification session expired. Please try again",
+      AUTH_INVALID_VERIFICATION_TOKEN:
+        "Verification token is invalid or expired",
+    },
+    registration: {
+      AUTH_INVALID_REGISTRATION_REQUEST:
+        "Please provide a valid registration request",
+      AUTH_PHONE_NOT_VERIFIED:
+        "Please verify your phone number before continuing",
+      AUTH_PASSWORD_VALIDATION_FAILED:
+        "Password does not meet the requirements",
+      AUTH_REGISTRATION_SUCCESS: "Registration completed successfully",
+      AUTH_REGISTRATION_SESSION_EXPIRED:
+        "Registration session expired. Please verify your phone number again",
+      AUTH_REGISTRATION_ERROR:
+        "Unable to complete registration. Please try again",
+    },
+    login: {
+      AUTH_INVALID_CREDENTIALS: "Phone number or password is incorrect",
+      AUTH_LOGIN_SUCCESS: "Login successful",
+    },
+    session: {
+      AUTH_REFRESH_TOKEN_REQUIRED: "Refresh token is required",
+      AUTH_INVALID_REFRESH_TOKEN: "Refresh token is invalid or expired",
+      AUTH_TOKEN_REFRESHED: "Session refreshed successfully",
+    },
+    logout: {
+      AUTH_LOGOUT_SUCCESS: "Logged out successfully",
+    },
   },
 };

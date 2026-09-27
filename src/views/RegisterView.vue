@@ -6,11 +6,14 @@ import { auth } from "@/firebase/index";
 import { signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
 import { normalizePhone, phoneValidate } from "@/composables/registerValidate";
 import CountryCodePicker from "@/components/CountryCodePicker.vue";
-const { t } = useI18n();
+import { getAuthErrorCode } from "@/utils/authError";
+const { t, te } = useI18n();
 const useStore = useAuthStore();
 let confirmationResult: any = null;
 let recaptchaVerifier: any = null;
 const messageFromRegisterInit = ref("");
+const authMessage = ref("");
+const authMessageIsError = ref(true);
 const steps = [
   { id: 1, label: "Basic Info" },
   { id: 2, label: "Verify" },
@@ -226,11 +229,16 @@ const validateStepThree = () => {
   return valid;
 };
 const registrationTicket = ref("");
+const authMessageFor = (group: string, code: string, fallbackCode: string) => {
+  const messageKey = `authMessages.${group}.${code}`;
+  return t(te(messageKey) ? messageKey : `authMessages.${group}.${fallbackCode}`);
+};
 
 const handleStepSubmit = async () => {
   if (currentStep.value === 1) {
     if (!validateStepOne()) return;
 
+    messageFromRegisterInit.value = "";
     isSubmitting.value = true;
 
     try {
@@ -238,15 +246,18 @@ const handleStepSubmit = async () => {
         form.value.phone,
         form.value.countryCode,
       );
-      const message = await useStore.signupInit(
+      const code = await useStore.signupInit(
         form.value.firstName,
         form.value.lastName,
         form.value.email,
         normalizedPhone,
       );
-      messageFromRegisterInit.value = message;
-      if (message.status !== 201) {
-        messageFromRegisterInit.value = message;
+      if (code !== "AUTH_PENDING_SIGNUP_CREATED") {
+        messageFromRegisterInit.value = authMessageFor(
+          "signup",
+          code,
+          "AUTH_PENDING_SIGNUP_ERROR",
+        );
         return;
       }
       confirmationResult = await signInWithPhoneNumber(
@@ -256,8 +267,13 @@ const handleStepSubmit = async () => {
       );
       currentStep.value = 2;
       startResendCooldown();
-    } catch (err) {
-      console.error(err);
+    } catch (error: unknown) {
+      const code = getAuthErrorCode(error, "AUTH_PENDING_SIGNUP_ERROR");
+      messageFromRegisterInit.value = authMessageFor(
+        "signup",
+        code,
+        "AUTH_PENDING_SIGNUP_ERROR",
+      );
     } finally {
       isSubmitting.value = false;
     }
@@ -268,6 +284,8 @@ const handleStepSubmit = async () => {
   if (currentStep.value === 2) {
     if (!validateStepTwo()) return;
 
+    authMessage.value = "";
+    authMessageIsError.value = true;
     isSubmitting.value = true;
 
     try {
@@ -278,15 +296,33 @@ const handleStepSubmit = async () => {
         form.value.countryCode,
       );
 
-      const response = await useStore.signupVerifyOtp(
-        idToken,
-        normalizedPhone,
-      );
+      const response = await useStore.signupVerifyOtp(idToken, normalizedPhone);
+
+      if (response.data.code !== "AUTH_PHONE_VERIFIED") {
+        authMessage.value = authMessageFor(
+          "phoneVerification",
+          response.data.code,
+          "AUTH_INVALID_VERIFICATION_TOKEN",
+        );
+        return;
+      }
 
       registrationTicket.value = response.data.registrationTicket;
+      authMessage.value = authMessageFor(
+        "phoneVerification",
+        response.data.code,
+        "AUTH_INVALID_VERIFICATION_TOKEN",
+      );
+      authMessageIsError.value = false;
 
       currentStep.value = 3;
-    } catch (err) {
+    } catch (error: unknown) {
+      const code = getAuthErrorCode(error, "AUTH_INVALID_VERIFICATION_TOKEN");
+      authMessage.value = authMessageFor(
+        "phoneVerification",
+        code,
+        "AUTH_INVALID_VERIFICATION_TOKEN",
+      );
     } finally {
       isSubmitting.value = false;
     }
@@ -296,15 +332,31 @@ const handleStepSubmit = async () => {
 
   if (!validateStepThree()) return;
 
+  authMessage.value = "";
+  authMessageIsError.value = true;
   isSubmitting.value = true;
 
   try {
-    await useStore.signupComplete(
+    const code = await useStore.signupComplete(
       registrationTicket.value,
       form.value.password,
     );
+    if (code !== "AUTH_REGISTRATION_SUCCESS") {
+      authMessage.value = authMessageFor(
+        "registration",
+        code,
+        "AUTH_REGISTRATION_ERROR",
+      );
+      return;
+    }
     isComplete.value = true;
-  } catch (err) {
+  } catch (error: unknown) {
+    const code = getAuthErrorCode(error, "AUTH_REGISTRATION_ERROR");
+    authMessage.value = authMessageFor(
+      "registration",
+      code,
+      "AUTH_REGISTRATION_ERROR",
+    );
   } finally {
     isSubmitting.value = false;
   }
@@ -393,7 +445,7 @@ const resendCode = async () => {
           {{ t("registerFlow.successTitle") }}
         </h2>
         <p class="max-w-sm text-sm text-gray-500 !py-4">
-          {{ t("registerFlow.successSubtitle") }}
+          {{ authMessageFor("registration", "AUTH_REGISTRATION_SUCCESS", "AUTH_REGISTRATION_ERROR") }}
         </p>
 
         <button
@@ -554,6 +606,13 @@ const resendCode = async () => {
               <p v-if="otpError" class="text-sm text-red-500 mt-2">
                 {{ otpError }}
               </p>
+              <p
+                v-if="authMessage"
+                class="mt-2 text-sm"
+                :class="authMessageIsError ? 'text-red-500' : 'text-emerald-600'"
+              >
+                {{ authMessage }}
+              </p>
             </div>
 
             <div class="flex items-center justify-between text-sm">
@@ -576,6 +635,13 @@ const resendCode = async () => {
           </div>
 
           <div v-else class="space-y-5">
+            <p
+              v-if="authMessage"
+              class="text-sm"
+              :class="authMessageIsError ? 'text-red-500' : 'text-emerald-600'"
+            >
+              {{ authMessage }}
+            </p>
             <div>
               <label class="block text-sm font-medium text-gray-700">
                 {{ t("registerFlow.password") }}

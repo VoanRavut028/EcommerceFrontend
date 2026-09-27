@@ -189,8 +189,55 @@ export default {
     weAccept: "WE ACCEPT",
   },
 
-  error: {
-    AUTH_INVALID_CREDENTIALS: "លេខទូរស័ព្ទឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ",
-    AUTH_SUCCESS_CREDENTIALS: "ចូលគណនីបានជោគជ័យ",
+  authMessages: {
+    signup: {
+      AUTH_USER_ALREADY_EXISTS:
+        "អ៊ីមែល ឬលេខទូរសព្ទនេះត្រូវបានប្រើរួចហើយ",
+      AUTH_PENDING_SIGNUP_CREATED:
+        "បានចាប់ផ្តើមការចុះឈ្មោះដោយជោគជ័យ សូមផ្ទៀងផ្ទាត់លេខទូរសព្ទរបស់អ្នក",
+      AUTH_PENDING_SIGNUP_ERROR:
+        "មិនអាចចាប់ផ្តើមការចុះឈ្មោះបានទេ សូមព្យាយាមម្តងទៀត",
+      AUTH_PENDING_SIGNUP_NOT_FOUND:
+        "រកមិនឃើញវគ្គចុះឈ្មោះទេ សូមចាប់ផ្តើមម្តងទៀត",
+    },
+    phoneVerification: {
+      AUTH_INVALID_VERIFICATION_REQUEST:
+        "សំណើផ្ទៀងផ្ទាត់មិនត្រឹមត្រូវទេ",
+      AUTH_PHONE_NUMBER_MISMATCH:
+        "លេខទូរសព្ទមិនត្រូវនឹងព័ត៌មានផ្ទៀងផ្ទាត់ទេ",
+      AUTH_PHONE_VERIFIED: "បានផ្ទៀងផ្ទាត់លេខទូរសព្ទដោយជោគជ័យ",
+      AUTH_VERIFICATION_SESSION_EXPIRED:
+        "វគ្គផ្ទៀងផ្ទាត់បានផុតកំណត់ សូមព្យាយាមម្តងទៀត",
+      AUTH_INVALID_VERIFICATION_TOKEN:
+        "សំបុតផ្ទៀងផ្ទាត់មិនត្រឹមត្រូវ ឬបានផុតកំណត់",
+    },
+    registration: {
+      AUTH_INVALID_REGISTRATION_REQUEST:
+        "សំណើចុះឈ្មោះមិនត្រឹមត្រូវទេ",
+      AUTH_PHONE_NOT_VERIFIED:
+        "សូមផ្ទៀងផ្ទាត់លេខទូរសព្ទរបស់អ្នកមុនពេលបន្ត",
+      AUTH_PASSWORD_VALIDATION_FAILED:
+        "ពាក្យសម្ងាត់មិនបំពេញតាមលក្ខខណ្ឌទេ",
+      AUTH_REGISTRATION_SUCCESS:
+        "បានបញ្ចប់ការចុះឈ្មោះដោយជោគជ័យ",
+      AUTH_REGISTRATION_SESSION_EXPIRED:
+        "វគ្គចុះឈ្មោះបានផុតកំណត់ សូមផ្ទៀងផ្ទាត់លេខទូរសព្ទរបស់អ្នកម្តងទៀត",
+      AUTH_REGISTRATION_ERROR:
+        "មិនអាចបញ្ចប់ការចុះឈ្មោះបានទេ សូមព្យាយាមម្តងទៀត",
+    },
+    login: {
+      AUTH_INVALID_CREDENTIALS:
+        "លេខទូរសព្ទ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវទេ",
+      AUTH_LOGIN_SUCCESS: "បានចូលគណនីដោយជោគជ័យ",
+    },
+    session: {
+      AUTH_REFRESH_TOKEN_REQUIRED: "ត្រូវការសំបុតបន្តសម័យ",
+      AUTH_INVALID_REFRESH_TOKEN:
+        "សំបុតបន្តមិនត្រឹមត្រូវ ឬបានផុតកំណត់",
+      AUTH_TOKEN_REFRESHED: "បានបន្តដោយជោគជ័យ",
+    },
+    logout: {
+      AUTH_LOGOUT_SUCCESS: "បានចាកចេញពីគណនីដោយជោគជ័យ",
+    },
   },
 };
