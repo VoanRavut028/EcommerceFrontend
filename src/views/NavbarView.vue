@@ -10,7 +10,9 @@ import ThemeToggle from "@/components/ThemeToggle.vue";
 import { useAuthStore } from "@/stores/auth.ts";
 import { useI18n } from "vue-i18n";
 import LangDropdown from "@/components/LangDropdown.vue";
+import { useNavCategoryLinks } from "@/composables/useNavCategoryLinks";
 const { t } = useI18n();
+const { categoryLinks } = useNavCategoryLinks((key) => String(t(key)));
 const authStore = useAuthStore();
 
 const showLogoutModal = ref(false);
@@ -72,10 +74,19 @@ const handleLogout = async () => {
 };
 
 const query = ref("");
+const props = defineProps<{ searchValue?: string }>();
 const isSearchOpen = ref(false);
 const searchInput = ref<HTMLInputElement | null>(null);
 
 const emit = defineEmits(["search", "clear"]);
+
+watch(
+  () => props.searchValue,
+  (value) => {
+    query.value = value ?? "";
+  },
+  { immediate: true },
+);
 
 async function openSearch() {
   isSearchOpen.value = true;
@@ -99,7 +110,7 @@ function onClear() {
 </script>
 <template>
   <div class="fixed inset-x-0 top-0 z-[1000] dark:!bg-navbar">
-    <nav class="container mx-auto bg-dominant py-2 dark:!bg-navbar">
+    <nav class="container mx-auto bg-dominant py-1.5 dark:!bg-navbar">
       <div class="flex justify-between items-center">
         <div class="lg:hidden shrink-0">
           <MobileNav
@@ -110,72 +121,12 @@ function onClear() {
           />
         </div>
         <!-- Left Menu -->
-        <div class="hidden lg:flex lg:items-center font-bold">
-          <ul class="flex items-center">
-            <!-- Products Dropdown -->
-            <li class="relative group">
-              <span
-                class="flex items-center text-text hover:cursor-pointer hover:text-accent active:text-accent gap-2 transition-all duration-300 relative after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-full after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100 active:after:scale-x-100"
-              >
-                {{ t("nav.products") }}
-                <span
-                  class="w-1.5 h-1.5 border-r-2 border-b-2 border-black transform rotate-45 transition-transform duration-300 translate-y-[-2px] group-hover:rotate-[225deg] group-hover:translate-y-[1px]"
-                ></span>
-              </span>
-
-              <div
-                class="absolute left-0 pt-4 w-60 invisible opacity-0 translate-y-2 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-50"
-              >
-                <div
-                  class="bg-dominant border border-gray-100 shadow-xl py-2 rounded-md"
-                >
-                  <RouterLink to="/">
-                    <a
-                      class="block px-6 py-3 text-[16px] text-text hover:text-accent relative after:absolute after:left-6 after:right-6 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100 transition-colors"
-                    >
-                      {{ t("nav.kitchen") }}
-                    </a>
-                  </RouterLink>
-                  <RouterLink to="/products/fashion">
-                    <a
-                      class="block px-6 py-3 text-[16px] text-text hover:text-accent relative after:absolute after:left-6 after:right-6 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100 transition-colors"
-                    >
-                      {{ t("nav.fashion") }}
-                    </a>
-                  </RouterLink>
-                  <RouterLink to="/products/Electronics">
-                    <a
-                      class="block px-6 py-3 text-[16px] text-text hover:text-accent relative after:absolute after:left-6 after:right-6 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100 transition-colors"
-                    >
-                      {{ t("nav.electronics") }}
-                    </a>
-                  </RouterLink>
-                  <div class="mx-6 border-t border-gray-50 my-1"></div>
-                  <RouterLink to="/products/all">
-                    <a
-                      class="block px-6 py-3 text-[16px] text-text hover:text-accent relative after:absolute after:left-6 after:right-6 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100 transition-colors"
-                    >
-                      {{ t("nav.shopAll") }}
-                    </a>
-                  </RouterLink>
-                </div>
-              </div>
-            </li>
-
-            <li
-              class="px-5 py-3 transition-colors cursor-pointer rounded text-text hover:text-accent relative after:absolute after:left-5 after:right-5 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100"
-            >
-              {{ t("nav.men") }}
-            </li>
-            <li
-              class="px-5 py-3 transition-colors cursor-pointer rounded text-text hover:text-accent relative after:absolute after:left-5 after:right-5 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100"
-            >
-              {{ t("nav.boys") }}
-            </li>
-            <li
-              class="px-5 py-3 transition-colors cursor-pointer rounded text-text hover:text-accent relative after:absolute after:left-5 after:right-5 after:-bottom-1 after:h-[2px] after:scale-x-0 after:bg-accent after:transition-transform after:duration-300 hover:after:scale-x-100"
-            >
-              {{ t("nav.girls") }}
+        <div class="hidden lg:flex lg:items-center font-normal">
+          <ul class="flex items-center gap-6">
+            <li v-for="item in categoryLinks" :key="item.key">
+              <RouterLink :to="item.to" class="block py-3 text-sm font-normal text-text transition-colors hover:text-accent">
+                {{ item.label }}
+              </RouterLink>
             </li>
           </ul>
         </div>
@@ -183,7 +134,7 @@ function onClear() {
         <!-- Logo -->
         <div class="justify-self-center">
           <p
-            class="text-normal text-[20px] hidden sm:text-2xl lg:flex lg:text-2xl xl:text-4xl font-[900] tracking-tighter"
+            class="text-normal text-[20px] hidden sm:text-2xl lg:flex lg:text-2xl xl:text-3xl font-[900] tracking-tighter"
           >
             VUT SHOP
           </p>
@@ -206,14 +157,14 @@ function onClear() {
                 <!-- Search bar -->
                 <div class="px-6 py-4">
                   <div
-                    class="relative flex items-center border-b border-gray-300 pb-3"
+                    class="relative flex items-center border-b border-border pb-3"
                   >
                     <input
                       ref="searchInput"
                       v-model="query"
                       type="text"
                       placeholder="What are you searching for?"
-                      class="w-full pr-16 text-base text-text outline-none bg-transparent"
+                      class="w-full bg-transparent pr-16 text-base !text-text-strong outline-none placeholder:!text-text-muted"
                       @keyup.enter="onSearch"
                       @keyup.esc="closeSearch"
                     />
@@ -222,7 +173,7 @@ function onClear() {
                       <!-- Search icon -->
                       <button
                         type="button"
-                        class="text-gray-800 hover:text-gray-500 transition-colors"
+                        class="text-text-strong transition-colors hover:text-text-muted"
                         aria-label="Search"
                         @click="onSearch"
                       >
@@ -244,7 +195,7 @@ function onClear() {
                       <!-- Close icon -->
                       <button
                         type="button"
-                        class="text-gray-800 hover:text-gray-500 transition-colors"
+                        class="text-text-strong transition-colors hover:text-text-muted"
                         aria-label="Close search"
                         @click="closeSearch"
                       >

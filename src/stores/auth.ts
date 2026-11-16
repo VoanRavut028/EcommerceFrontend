@@ -32,9 +32,7 @@ export const useAuthStore = defineStore("auth", () => {
       console.log(`init auth is running success ${res.data.message}`);
       user.value = res.data.user;
       console.log(`User data after init: ${res.data.user}`);
-      if (res.data.accessToken) {
-        tokenStore.set(res.data.accessToken);
-      }
+       
       isAuthenticated.value = true;
     } catch (error: any) {
       clearSession();
@@ -145,6 +143,35 @@ export const useAuthStore = defineStore("auth", () => {
       isLoading.value = false;
     }
   };
+
+  const loginWithEmailCredentials = async (
+    email: string,
+    password: string,
+  ): Promise<string> => {
+    try {
+      isLoading.value = true;
+      console.log(`Attempting login with email: ${email}`);
+      const res = await api.post("/login/email", {
+        email,
+        password,
+      });
+
+      if (typeof res.data.code !== "string") {
+        throw new Error("Login response is missing an authentication code");
+      }
+
+      tokenStore.set(res.data.accessToken);
+      user.value = res.data.user;
+      isAuthenticated.value = true;
+      showAuthModal.value = false;
+      scheduleRefresh(res.data.accessToken);
+
+      return res.data.code;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   const logout = async () => {
     try {
       await api.post("/logout");
@@ -205,7 +232,9 @@ export const useAuthStore = defineStore("auth", () => {
     });
 
     if (typeof data.code !== "string") {
-      throw new Error("Registration response is missing an authentication code");
+      throw new Error(
+        "Registration response is missing an authentication code",
+      );
     }
 
     return data.code;
@@ -241,6 +270,7 @@ export const useAuthStore = defineStore("auth", () => {
     refreshToken,
     loginWithProvider,
     loginWithCredentials,
+    loginWithEmailCredentials,
     exchangeOAuthCode,
     logout,
     clearSession,

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+Khmer:wght@100..900&display=swap");
 
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
@@ -16,7 +16,44 @@ body,
 
 body {
   margin: 0;
+  font-family: var(--font-english);
 }
+
+.font-english {
+  font-family: var(--font-english);
+}
+
+.font-khmer {
+  font-family: var(--font-khmer);
+  line-height: 1.8;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  color: #000000;
+}
+
+input:not([type="checkbox"]):not([type="radio"])::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: #000000;
+  opacity: 1;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([class*="border-red-"]),
+textarea:not([class*="border-red-"]),
+select:not([class*="border-red-"]) {
+  border-color: #000000;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([class*="border-red-"]):focus,
+textarea:not([class*="border-red-"]):focus,
+select:not([class*="border-red-"]):focus {
+  border-color: #000000;
+  --tw-ring-color: #000000;
+}
+
 :root {
   /* ===============================
      LIGHT MODE
@@ -64,7 +101,7 @@ body {
   --shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
 
   /* Fonts */
-  --font-khmer: "Battambang", system-ui, sans-serif;
+  --font-khmer: "Noto Sans Khmer", "Khmer OS System", system-ui, sans-serif;
   --font-english: "Inter", system-ui, sans-serif;
 }
 
@@ -247,6 +284,7 @@ body {
   --color-dominant-alt: var(--dominant-alt);
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
+  --color-primary: var(--primary);
   --color-text: var(--text);
   --color-text-strong: var(--text-strong);
   --color-text-muted: var(--text-muted);

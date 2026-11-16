@@ -26,8 +26,8 @@
           </p>
 
           <div class="mt-8 flex flex-wrap gap-3">
-            <button class="bg-accent">Start shopping</button>
-            <button class="btn-secondary">Explore collection</button>
+            <RouterLink to="/products/all" class="inline-flex items-center justify-center bg-text-strong px-5 py-3 text-sm font-semibold text-white transition hover:opacity-85">Start shopping</RouterLink>
+            <RouterLink to="/products/all" class="btn-secondary inline-flex items-center justify-center">Explore collection</RouterLink>
           </div>
 
           <!-- <div class="mt-10 grid gap-4 sm:grid-cols-3">

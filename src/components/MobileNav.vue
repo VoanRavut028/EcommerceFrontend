@@ -3,11 +3,12 @@ import { ref } from "vue";
 import { RouterLink } from "vue-router";
 import { useAuthStore } from "@/stores/auth.ts";
 import { useI18n } from "vue-i18n";
+import { useNavCategoryLinks } from "@/composables/useNavCategoryLinks";
 
 const authStore = useAuthStore();
 const { t } = useI18n();
 const isMobileMenuOpen = ref(false);
-const showProducts = ref(false);
+const { categoryLinks } = useNavCategoryLinks((key) => String(t(key)));
 const emit = defineEmits<{
   (event: "open-login"): void;
   (event: "open-register"): void;
@@ -29,9 +30,6 @@ const logout = () => {
   isMobileMenuOpen.value = false;
 };
 
-const toggleProducts = () => {
-  showProducts.value = !showProducts.value;
-};
 </script>
 
 <template>
@@ -106,75 +104,15 @@ const toggleProducts = () => {
         </div>
 
         <nav class="mt-8 text-text">
-          <div class="mb-1">
-            <button
-              type="button"
-              @click="toggleProducts"
-              class="flex items-center justify-between w-full py-3 font-semibold border-b border-border hover:text-accent transition-colors"
-            >
-              {{ t("nav.products") }}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="2"
-                stroke="currentColor"
-                class="w-4 h-4 transition-transform duration-300"
-                :class="{ 'rotate-180': showProducts }"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m19.5 8.25-7.5 7.5-7.5-7.5"
-                />
-              </svg>
-            </button>
-            <div v-if="showProducts" class="pl-4 mt-2 space-y-2 text-sm">
-              <RouterLink
-                to="/"
-                class="block py-2 text-text hover:text-accent transition-colors"
-                @click="isMobileMenuOpen = false"
-                >{{ t("nav.kitchen") }}</RouterLink
-              >
-              <RouterLink
-                to="/products/fashion"
-                class="block py-2 text-text hover:text-accent transition-colors"
-                @click="isMobileMenuOpen = false"
-                >{{ t("nav.fashion") }}</RouterLink
-              >
-              <RouterLink
-                to="/products/Electronics"
-                class="block py-2 text-text hover:text-accent transition-colors"
-                @click="isMobileMenuOpen = false"
-                >{{ t("nav.electronics") }}</RouterLink
-              >
-              <RouterLink
-                to="/products/all"
-                class="block py-2 text-text hover:text-accent transition-colors"
-                @click="isMobileMenuOpen = false"
-                >{{ t("nav.shopAll") }}</RouterLink
-              >
-            </div>
-          </div>
+          <RouterLink
+            v-for="item in categoryLinks"
+            :key="item.key"
+            :to="item.to"
+            class="block border-b border-border py-3 text-sm font-normal transition-colors hover:text-accent"
+            @click="isMobileMenuOpen = false"
+          >{{ item.label }}</RouterLink>
+          <RouterLink to="/products/all" class="block border-b border-border py-3 text-sm font-normal hover:text-accent" @click="isMobileMenuOpen = false">{{ t("nav.shopAll") }}</RouterLink>
 
-          <RouterLink
-            to="#"
-            class="block py-3 font-semibold border-b border-border hover:text-accent transition-colors"
-            @click="isMobileMenuOpen = false"
-            >{{ t("nav.men") }}</RouterLink
-          >
-          <RouterLink
-            to="#"
-            class="block py-3 font-semibold border-b border-border hover:text-accent transition-colors"
-            @click="isMobileMenuOpen = false"
-            >{{ t("nav.boys") }}</RouterLink
-          >
-          <RouterLink
-            to="#"
-            class="block py-3 font-semibold border-b border-border hover:text-accent transition-colors"
-            @click="isMobileMenuOpen = false"
-            >{{ t("nav.girls") }}</RouterLink
-          >
         </nav>
 
         <div

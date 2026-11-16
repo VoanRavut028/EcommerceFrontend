@@ -8,7 +8,8 @@ import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "@/firebase/index";
 import { normalizePhone } from "@/composables/registerValidate";
 import CountryCodePicker from "@/components/CountryCodePicker.vue";
-const { t } = useI18n();
+import { getAuthErrorCode } from "@/utils/authError";
+const { t, te } = useI18n();
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
@@ -25,6 +26,7 @@ const otpCode = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const error = ref("");
+const statusMessage = ref("");
 const isSubmitting = ref(false);
 const step = ref<1 | 2 | 3 | 4>(1);
 let confirmationResult: any = null;
@@ -37,8 +39,14 @@ onMounted(() => {
   });
 });
 
-const getErrorMessage = (err: any) =>
-  err.response?.data?.message || err.message || t("forgot.requestFailed");
+const resetMessage = (group: string, code: string, fallbackCode: string) => {
+  const messageKey = `authMessages.resetPassword.${group}.${code}`;
+  return t(
+    te(messageKey)
+      ? messageKey
+      : `authMessages.resetPassword.${group}.${fallbackCode}`,
+  );
+};
 
 const handleInit = async () => {
   const valid = /^\+?[\d\s().-]{8,}$/.test(phone.value.trim());
@@ -49,18 +57,36 @@ const handleInit = async () => {
 
   isSubmitting.value = true;
   error.value = "";
+  statusMessage.value = "";
 
   try {
     const normalizedPhone = normalizePhone(phone.value, countryCode.value);
-    await authStore.resetPasswordInit(normalizedPhone);
+    const response = await authStore.resetPasswordInit(normalizedPhone);
+    if (response.data.code !== "AUTH_RESET_INIT_SUCCESS") {
+      error.value = resetMessage(
+        "init",
+        response.data.code,
+        "AUTH_RESET_INIT_ERROR",
+      );
+      return;
+    }
     confirmationResult = await signInWithPhoneNumber(
       auth,
       normalizedPhone,
       recaptchaVerifier,
     );
+    statusMessage.value = resetMessage(
+      "init",
+      response.data.code,
+      "AUTH_RESET_INIT_ERROR",
+    );
     step.value = 2;
-  } catch (err: any) {
-    error.value = getErrorMessage(err);
+  } catch (err: unknown) {
+    error.value = resetMessage(
+      "init",
+      getAuthErrorCode(err, "AUTH_RESET_INIT_ERROR"),
+      "AUTH_RESET_INIT_ERROR",
+    );
   } finally {
     isSubmitting.value = false;
   }
@@ -75,6 +101,7 @@ const handleVerifyOtp = async () => {
 
   isSubmitting.value = true;
   error.value = "";
+  statusMessage.value = "";
 
   try {
     const userCredential = await confirmationResult.confirm(
@@ -85,10 +112,27 @@ const handleVerifyOtp = async () => {
       idToken,
       normalizedPhone,
     );
+    if (response.data.code !== "AUTH_RESET_PHONE_VERIFIED") {
+      error.value = resetMessage(
+        "phoneVerification",
+        response.data.code,
+        "AUTH_RESET_INVALID_VERIFICATION_TOKEN",
+      );
+      return;
+    }
     resetTicket = response.data.resetTicket;
+    statusMessage.value = resetMessage(
+      "phoneVerification",
+      response.data.code,
+      "AUTH_RESET_INVALID_VERIFICATION_TOKEN",
+    );
     step.value = 3;
-  } catch (err: any) {
-    error.value = getErrorMessage(err);
+  } catch (err: unknown) {
+    error.value = resetMessage(
+      "phoneVerification",
+      getAuthErrorCode(err, "AUTH_RESET_INVALID_VERIFICATION_TOKEN"),
+      "AUTH_RESET_INVALID_VERIFICATION_TOKEN",
+    );
   } finally {
     isSubmitting.value = false;
   }
@@ -110,14 +154,31 @@ const handleComplete = async () => {
   isSubmitting.value = true;
 
   try {
-    await authStore.resetPasswordComplete(
+    const response = await authStore.resetPasswordComplete(
       resetTicket,
       password.value,
       confirmPassword.value,
     );
+    if (response.data.code !== "AUTH_RESET_PASSWORD_SUCCESS") {
+      error.value = resetMessage(
+        "complete",
+        response.data.code,
+        "AUTH_RESET_PASSWORD_ERROR",
+      );
+      return;
+    }
+    statusMessage.value = resetMessage(
+      "complete",
+      response.data.code,
+      "AUTH_RESET_PASSWORD_ERROR",
+    );
     step.value = 4;
-  } catch (err: any) {
-    error.value = getErrorMessage(err);
+  } catch (err: unknown) {
+    error.value = resetMessage(
+      "complete",
+      getAuthErrorCode(err, "AUTH_RESET_PASSWORD_ERROR"),
+      "AUTH_RESET_PASSWORD_ERROR",
+    );
   } finally {
     isSubmitting.value = false;
   }
@@ -178,6 +239,7 @@ const closeModal = () => {
       <!-- Step 1: request reset -->
       <div v-if="step === 1">
         <form class="space-y-5" @submit.prevent="handleInit" novalidate>
+          <!-- <p v-if="error" class="text-sm text-red-500">{{ error }}</p> -->
           <div>
             <label class="block text-sm font-medium text-gray-700">
               {{ t("forgot.phoneLabel") }}
@@ -226,6 +288,10 @@ const closeModal = () => {
         <p class="text-sm text-gray-500">
           {{ t("forgot.otpSent", { phone }) }}
         </p>
+        <p v-if="statusMessage" class="text-sm text-emerald-600">
+          {{ statusMessage }}
+        </p>
+    
         <input
           v-model="otpCode"
           inputmode="numeric"
@@ -248,6 +314,10 @@ const closeModal = () => {
         @submit.prevent="handleComplete"
         novalidate
       >
+        <p v-if="statusMessage" class="text-sm text-emerald-600">
+          {{ statusMessage }}
+        </p>
+  
         <input
           v-model="password"
           type="password"
@@ -297,7 +367,7 @@ const closeModal = () => {
         </h2>
 
         <p class="text-sm leading-6 text-gray-500 text-center">
-          {{ t("forgot.successSubtitle") }}
+          {{ statusMessage || t("forgot.successSubtitle") }}
         </p>
 
         <button

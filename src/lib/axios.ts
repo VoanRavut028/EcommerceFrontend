@@ -44,22 +44,43 @@ function silentRefresh(): Promise<string> {
   return refreshInFlight;
 }
 
-function isPublicEndpoint(url: string): boolean {
-  return ["/login", "/register", "/refresh", "/logout"].some((p) =>
-    url.includes(p),
+function isPublicProductRead(url: string, method = ""): boolean {
+  return method.toUpperCase() === "GET" && /^\/products(?:\/[^/?]+)?(?:[?#]|$)/.test(url);
+}
+
+function isPublicCategoryRead(url: string, method = ""): boolean {
+  return method.toUpperCase() === "GET" && /^\/categories(?:\/[^/?]+)?(?:[?#]|$)/.test(url);
+}
+
+function isPublicEndpoint(url: string, method = ""): boolean {
+  const publicAuthEndpoint = [
+    "/login",
+    "/loginCredentailEmail",
+    "/register",
+    "/refresh",
+    "/logout",
+  ].some((p) => url.includes(p));
+
+  return (
+    publicAuthEndpoint ||
+    isPublicProductRead(url, method) ||
+    isPublicCategoryRead(url, method)
   );
 }
 
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   const authStore = useAuthStore();
   const token = tokenStore.get();
+  const publicRead =
+    isPublicProductRead(config.url ?? "", config.method ?? "") ||
+    isPublicCategoryRead(config.url ?? "", config.method ?? "");
 
-  if (token) {
+  if (token && !publicRead) {
     authStore.isAuthenticated = true;
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  if (!token || isPublicEndpoint(config.url ?? "")) {
+  if (!token || isPublicEndpoint(config.url ?? "", config.method ?? "")) {
     return config;
   }
 
@@ -88,7 +109,7 @@ api.interceptors.response.use(
       err.response?.status !== 401 ||
       !original ||
       original._retry ||
-      isPublicEndpoint(original.url ?? "") ||
+      isPublicEndpoint(original.url ?? "", original.method ?? "") ||
       !original.headers?.Authorization
     ) {
       return Promise.reject(err);

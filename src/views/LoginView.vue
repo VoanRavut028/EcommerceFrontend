@@ -17,29 +17,54 @@ onMounted(() => {
   }
 });
 const phone = ref("");
+const email = ref("");
+const loginMethod = ref<"phone" | "email">("phone");
 const countryCode = ref("+855");
 const password = ref("");
-const errors = ref({ phone: "", password: "" });
+const errors = ref({ phone: "", email: "", password: "" });
+
+const toggleLoginMethod = () => {
+  loginMethod.value = loginMethod.value === "phone" ? "email" : "phone";
+  errors.value = { phone: "", email: "", password: "" };
+  message.value = "";
+};
 
 const handleLoginWithCredentail = async () => {
   message.value = "";
 
-  const normalizedPhone = normalizePhone(phone.value, countryCode.value);
+  const normalizedPhone =
+    loginMethod.value === "phone"
+      ? normalizePhone(phone.value, countryCode.value)
+      : "";
 
-  const result = validateLogin({
-    phone: normalizedPhone,
-    password: password.value,
-  });
-
-  errors.value = result.errors;
-
-  if (!result.valid) return;
+  if (loginMethod.value === "phone") {
+    const result = validateLogin({
+      phone: normalizedPhone,
+      password: password.value,
+    });
+    errors.value = { ...result.errors, email: "" };
+    if (!result.valid) return;
+  } else {
+    const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim());
+    errors.value = {
+      phone: "",
+      email: emailIsValid ? "" : t("auth.validation.emailInvalid"),
+      password: password.value.trim()
+        ? ""
+        : t("auth.validation.passwordRequired"),
+    };
+    if (errors.value.email || errors.value.password) return;
+  }
 
   try {
-    const code = await authStore.loginWithCredentials(
-      normalizedPhone,
-      password.value,
-    );
+    console.log(`Val ${loginMethod.value}`);
+    const code =
+      loginMethod.value === "phone"
+        ? await authStore.loginWithCredentials(normalizedPhone, password.value)
+        : await authStore.loginWithEmailCredentials(
+            email.value.trim(),
+            password.value,
+          );
 
     if (code !== "AUTH_LOGIN_SUCCESS") {
       message.value = t("authMessages.login.AUTH_INVALID_CREDENTIALS");
@@ -119,12 +144,12 @@ const switchToForgotPassword = () => {
 
       <!-- Form -->
       <form class="space-y-5" @submit.prevent="handleLoginWithCredentail">
-        <!-- phone -->
+        <!-- Credential field -->
         <div class=" ">
           <label class="block text-sm font-medium text-gray-700">
-            {{ t("auth.phone") }}
+            {{ loginMethod === "phone" ? t("auth.phone") : t("auth.email") }}
           </label>
-          <div class="flex gap-3">
+          <div v-if="loginMethod === 'phone'" class="flex gap-3">
             <CountryCodePicker v-model="countryCode" />
             <input
               v-model="phone"
@@ -134,8 +159,19 @@ const switchToForgotPassword = () => {
               class="h-10 min-w-0 flex-1 rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
             />
           </div>
+          <input
+            v-else
+            v-model="email"
+            type="email"
+            autocomplete="email"
+            :placeholder="t('auth.enterEmail')"
+            class="h-10 w-full rounded-lg border border-gray-300 outline-none focus:ring-1 focus:ring-slate-500 focus:border-transparent !px-3"
+          />
           <p v-if="errors.phone" class="text-sm text-red-500 mt-1">
             {{ errors.phone }}
+          </p>
+          <p v-if="errors.email" class="text-sm text-red-500 mt-1">
+            {{ errors.email }}
           </p>
         </div>
 
@@ -161,13 +197,22 @@ const switchToForgotPassword = () => {
         </div>
 
         <!-- Forgot Password -->
-        <div>
+        <div class="flex items-center justify-between gap-3">
           <button
             type="button"
             @click="switchToForgotPassword"
             class="text-sm font-semibold text-slate-900 hover:underline cursor-pointer"
           >
             {{ t("auth.forgotPassword") }}
+          </button>
+          <button
+            type="button"
+            @click="toggleLoginMethod"
+            class="text-sm font-semibold text-slate-900 hover:underline cursor-pointer"
+          >
+            {{
+              loginMethod === "phone" ? t("auth.useEmail") : t("auth.usePhone")
+            }}
           </button>
         </div>
 

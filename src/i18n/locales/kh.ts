@@ -15,6 +15,12 @@ export default {
     en: "អង់គ្លេស",
     kh: "ខ្មែរ",
   },
+  productCategories: {
+    women: "ស្ត្រី",
+    men: "បុរស",
+    kids: "កុមារ",
+    accessories: "គ្រឿងបន្ថែម",
+  },
   auth: {
     welcomeBackTitle: "ស្វាគមន៍ត្រឡប់មកវិញ",
     welcomeBackSubtitle: "ស្វាគមន៍ត្រឡប់មកវិញ! សូមបញ្ចូលព័ត៌មានរបស់អ្នក។",
@@ -25,8 +31,11 @@ export default {
     enterPhone: "បញ្ចូលលេខទូរស័ព្ទរបស់អ្នក",
     enterPassword: "ពាក្យសម្ងាត់",
     forgotPassword: "ភ្លេចពាក្យសម្ងាត់?",
+    useEmail: "ប្រើអ៊ីមែលជំនួសវិញ",
+    usePhone: "ប្រើលេខទូរសព្ទជំនួសវិញ",
     validation: {
       phoneInvalid: "ត្រូវបញ្ចូលលេខទូរស័ព្ទត្រឹមត្រូវ",
+      emailInvalid: "សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលត្រឹមត្រូវ",
       passwordRequired: "ទាមទារ",
     },
     loginFailed: "ការចូលគណនីបានបរាជ័យ",
@@ -50,6 +59,51 @@ export default {
     alreadyHaveAccount: "មានគណនីរួចហើយ?",
     signInLink: "ចូលគណនី",
     registrationSuccess: "ការចុះឈ្មោះជោគជ័យ! សូមចូលប្រើគណនីថ្មីរបស់អ្នក។",
+  },
+  dashboard: {
+    eyebrow: "ទិដ្ឋភាពទូទៅហាង",
+    title: "ផ្ទាំងគ្រប់គ្រង",
+    subtitle: "នេះជាស្ថានភាពហាងរបស់អ្នកនៅថ្ងៃនេះ។",
+    last30Days: "៣០ ថ្ងៃចុងក្រោយ",
+    previewLabel: "ទិន្នន័យសាកល្បង៖",
+    previewNotice:
+      "តួលេខទាំងនេះគ្រាន់តែជាគំរូប៉ុណ្ណោះ។ ភ្ជាប់ API ផ្ទាំងគ្រប់គ្រង ដើម្បីបង្ហាញទិន្នន័យបច្ចុប្បន្ន។",
+    stats: "ស្ថិតិហាង",
+    totalOrders: "ការបញ្ជាទិញសរុប",
+    revenue: "ប្រាក់ចំណូល",
+    users: "អ្នកប្រើប្រាស់",
+    products: "ផលិតផល",
+    vsLastMonth: "ធៀបនឹងខែមុន",
+    salesOverview: "ទិដ្ឋភាពទូទៅការលក់",
+    salesOverviewSubtitle: "សកម្មភាពលក់ប្រចាំថ្ងៃក្នុងសប្តាហ៍នេះ",
+    thisWeek: "សប្តាហ៍នេះ",
+    salesChartNote: "ការលក់ប្រចាំថ្ងៃ (ទិន្នន័យសាកល្បង)",
+    sales: "ការលក់",
+    mon: "ចន្ទ",
+    tue: "អង្គារ",
+    wed: "ពុធ",
+    thu: "ព្រហស្បតិ៍",
+    fri: "សុក្រ",
+    sat: "សៅរ៍",
+    sun: "អាទិត្យ",
+    quickSummary: "សង្ខេបរហ័ស",
+    quickSummarySubtitle: "សមិទ្ធផលហាងមួយភ្លែត",
+    conversionRate: "អត្រាបម្លែង",
+    conversionChange: "កើនឡើង ០.៨% ធៀបនឹងខែមុន",
+    averageOrder: "តម្លៃបញ្ជាទិញជាមធ្យម",
+    returningCustomers: "អតិថិជនត្រឡប់មកទិញ",
+    recentOrders: "ការបញ្ជាទិញថ្មីៗ",
+    recentOrdersSubtitle: "សេចក្តីសង្ខេបសកម្មភាពថ្មីៗរបស់អ្នក",
+    sampleRows: "ការបញ្ជាទិញសាកល្បង",
+    orderId: "ការបញ្ជាទិញ",
+    customer: "អតិថិជន",
+    date: "កាលបរិច្ឆេទ",
+    amount: "ចំនួនទឹកប្រាក់",
+    status: "ស្ថានភាព",
+    delivered: "បានដឹកជញ្ជូន",
+    processing: "កំពុងដំណើរការ",
+    shipped: "បានផ្ញើ",
+    pending: "កំពុងរង់ចាំ",
   },
   registerFlow: {
     close: "បិទប្រអប់ចុះឈ្មោះ",
@@ -238,6 +292,44 @@ export default {
     },
     logout: {
       AUTH_LOGOUT_SUCCESS: "បានចាកចេញពីគណនីដោយជោគជ័យ",
+    },
+    resetPassword: {
+      init: {
+        AUTH_RESET_PHONE_REQUIRED: "ត្រូវបញ្ចូលលេខទូរសព្ទ",
+        AUTH_RESET_USER_NOT_FOUND:
+          "រកមិនឃើញគណនីដែលភ្ជាប់ជាមួយលេខទូរសព្ទនេះទេ",
+        AUTH_RESET_INIT_SUCCESS:
+          "អ្នកអាចបន្តទៅការផ្ទៀងផ្ទាត់លេខទូរសព្ទបាន",
+        AUTH_RESET_INIT_ERROR:
+          "មិនអាចចាប់ផ្តើមការកំណត់ពាក្យសម្ងាត់ឡើងវិញបានទេ សូមព្យាយាមម្តងទៀត",
+      },
+      phoneVerification: {
+        AUTH_RESET_VERIFICATION_FIELDS_REQUIRED:
+          "ត្រូវបញ្ចូល ID token និងលេខទូរសព្ទ",
+        AUTH_RESET_PHONE_MISMATCH:
+          "លេខទូរសព្ទមិនត្រូវនឹងព័ត៌មានផ្ទៀងផ្ទាត់ទេ",
+        AUTH_RESET_PHONE_VERIFIED:
+          "បានផ្ទៀងផ្ទាត់លេខទូរសព្ទដោយជោគជ័យ",
+        AUTH_RESET_VERIFICATION_EXPIRED:
+          "វគ្គផ្ទៀងផ្ទាត់បានផុតកំណត់ សូមព្យាយាមម្តងទៀត",
+        AUTH_RESET_INVALID_VERIFICATION_TOKEN:
+          "កូដផ្ទៀងផ្ទាត់មិនត្រឹមត្រូវ ឬបានផុតកំណត់",
+      },
+      complete: {
+        AUTH_RESET_FIELDS_REQUIRED:
+          "ត្រូវបញ្ចូលសំបុត្រកំណត់ពាក្យសម្ងាត់ឡើងវិញ ពាក្យសម្ងាត់ និងការបញ្ជាក់ពាក្យសម្ងាត់",
+        AUTH_RESET_PASSWORD_MISMATCH:
+          "ពាក្យសម្ងាត់ និងការបញ្ជាក់ពាក្យសម្ងាត់មិនដូចគ្នាទេ",
+        AUTH_RESET_USER_NOT_FOUND: "រកមិនឃើញគណនីទេ",
+        AUTH_RESET_PASSWORD_VALIDATION_FAILED:
+          "ពាក្យសម្ងាត់មិនបំពេញតាមលក្ខខណ្ឌទេ",
+        AUTH_RESET_PASSWORD_SUCCESS:
+          "បានកំណត់ពាក្យសម្ងាត់ឡើងវិញដោយជោគជ័យ សូមចូលគណនីម្តងទៀត",
+        AUTH_RESET_SESSION_EXPIRED:
+          "វគ្គកំណត់ពាក្យសម្ងាត់ឡើងវិញបានផុតកំណត់ សូមផ្ទៀងផ្ទាត់លេខទូរសព្ទរបស់អ្នកម្តងទៀត",
+        AUTH_RESET_PASSWORD_ERROR:
+          "មិនអាចកំណត់ពាក្យសម្ងាត់ឡើងវិញបានទេ សូមព្យាយាមម្តងទៀត",
+      },
     },
   },
 };

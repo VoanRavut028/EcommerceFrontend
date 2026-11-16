@@ -76,7 +76,7 @@ onBeforeUnmount(() =>
   <div ref="root" class="relative shrink-0">
     <button
       type="button"
-      class="flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 text-sm hover:bg-gray-50"
+      class="flex h-10 items-center gap-2 rounded-lg border border-black bg-white px-3 text-sm text-black hover:bg-gray-50"
       :aria-expanded="isOpen"
       aria-haspopup="listbox"
       @click="isOpen = !isOpen"
@@ -87,7 +87,7 @@ onBeforeUnmount(() =>
         class="h-4 w-6 object-cover ring-1 ring-gray-200"
       />
       <span>{{ selectedCountry.dialCode }}</span>
-      <span class="text-gray-400">▾</span>
+      <span class="text-black">▾</span>
     </button>
 
     <div

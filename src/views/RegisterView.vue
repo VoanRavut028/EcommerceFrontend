@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAuthStore } from "@/stores/auth";
 import { auth } from "@/firebase/index";
@@ -49,6 +49,9 @@ onMounted(() => {
   recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
     size: "normal",
   });
+});
+onBeforeUnmount(() => {
+  recaptchaVerifier?.clear();
 });
 const stepTitle = computed(() => {
   if (currentStep.value === 1) return t("registerFlow.step1Title");
@@ -746,7 +749,10 @@ const resendCode = async () => {
               </button>
             </div>
             <div>
-              <div id="recaptcha-container"></div>
+              <div
+                id="recaptcha-container"
+                v-show="currentStep === 1"
+              ></div>
             </div>
           </div>
         </form>

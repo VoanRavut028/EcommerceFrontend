@@ -15,6 +15,12 @@ export default {
     en: "English",
     kh: "Khmer",
   },
+  productCategories: {
+    women: "WOMEN",
+    men: "MEN",
+    kids: "KIDS",
+    accessories: "ACCESSORIES",
+  },
   auth: {
     welcomeBackTitle: "Welcome back",
     welcomeBackSubtitle: "Welcome back! Please enter your details.",
@@ -25,8 +31,11 @@ export default {
     enterPhone: "Enter your phone number",
     enterPassword: "Password",
     forgotPassword: "Forgot password?",
+    useEmail: "Use email instead",
+    usePhone: "Use phone instead",
     validation: {
       phoneInvalid: "Must be a valid phone number",
+      emailInvalid: "Please enter a valid email address",
       passwordRequired: "Required",
     },
     loginFailed: "Login failed",
@@ -51,6 +60,51 @@ export default {
     signInLink: "Login",
     registrationSuccess:
       "Registration successful! Please log in with your new account.",
+  },
+  dashboard: {
+    eyebrow: "STORE OVERVIEW",
+    title: "Dashboard",
+    subtitle: "Here's what's happening with your store today.",
+    last30Days: "Last 30 days",
+    previewLabel: "Preview data:",
+    previewNotice:
+      "These sample figures are placeholders. Connect your dashboard API to show live data.",
+    stats: "Store statistics",
+    totalOrders: "Total orders",
+    revenue: "Revenue",
+    users: "Users",
+    products: "Products",
+    vsLastMonth: "vs. last month",
+    salesOverview: "Sales overview",
+    salesOverviewSubtitle: "Daily sales activity for this week",
+    thisWeek: "This week",
+    salesChartNote: "Daily sales (sample data)",
+    sales: "Sales",
+    mon: "Mon",
+    tue: "Tue",
+    wed: "Wed",
+    thu: "Thu",
+    fri: "Fri",
+    sat: "Sat",
+    sun: "Sun",
+    quickSummary: "Quick summary",
+    quickSummarySubtitle: "Store performance at a glance",
+    conversionRate: "Conversion rate",
+    conversionChange: "Up 0.8% compared to last month",
+    averageOrder: "Average order value",
+    returningCustomers: "Returning customers",
+    recentOrders: "Recent orders",
+    recentOrdersSubtitle: "A snapshot of your latest activity",
+    sampleRows: "Sample orders",
+    orderId: "Order",
+    customer: "Customer",
+    date: "Date",
+    amount: "Amount",
+    status: "Status",
+    delivered: "Delivered",
+    processing: "Processing",
+    shipped: "Shipped",
+    pending: "Pending",
   },
   registerFlow: {
     close: "Close registration",
@@ -235,6 +289,42 @@ export default {
     },
     logout: {
       AUTH_LOGOUT_SUCCESS: "Logged out successfully",
+    },
+    resetPassword: {
+      init: {
+        AUTH_RESET_PHONE_REQUIRED: "Phone number is required",
+        AUTH_RESET_USER_NOT_FOUND:
+          "No account was found for this phone number",
+        AUTH_RESET_INIT_SUCCESS: "You can continue to phone verification",
+        AUTH_RESET_INIT_ERROR:
+          "Unable to start password reset. Please try again",
+      },
+      phoneVerification: {
+        AUTH_RESET_VERIFICATION_FIELDS_REQUIRED:
+          "ID token and phone number are required",
+        AUTH_RESET_PHONE_MISMATCH:
+          "The phone number does not match the verification",
+        AUTH_RESET_PHONE_VERIFIED: "Phone number verified successfully",
+        AUTH_RESET_VERIFICATION_EXPIRED:
+          "Verification session expired. Please try again",
+        AUTH_RESET_INVALID_VERIFICATION_TOKEN:
+          "Verification token is invalid or expired",
+      },
+      complete: {
+        AUTH_RESET_FIELDS_REQUIRED:
+          "Reset ticket, password, and password confirmation are required",
+        AUTH_RESET_PASSWORD_MISMATCH:
+          "Password and password confirmation do not match",
+        AUTH_RESET_USER_NOT_FOUND: "Account was not found",
+        AUTH_RESET_PASSWORD_VALIDATION_FAILED:
+          "Password does not meet the requirements",
+        AUTH_RESET_PASSWORD_SUCCESS:
+          "Password reset successfully. Please log in again",
+        AUTH_RESET_SESSION_EXPIRED:
+          "Password reset session expired. Please verify your phone number again",
+        AUTH_RESET_PASSWORD_ERROR:
+          "Unable to reset password. Please try again",
+      },
     },
   },
 };
