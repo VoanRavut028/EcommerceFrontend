@@ -11,8 +11,15 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
+const configuredApiBase = String(import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+const apiBaseUrl = /\/api\/v1$/i.test(configuredApiBase)
+  ? configuredApiBase
+  : /\/api$/i.test(configuredApiBase)
+    ? `${configuredApiBase}/v1`
+    : `${configuredApiBase}/api/v1`;
+
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL as string,
+  baseURL: apiBaseUrl,
   withCredentials: true,
 });
 

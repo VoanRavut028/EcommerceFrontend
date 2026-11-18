@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useProductStore, type ProductRecord } from "@/stores/product";
 import { isCategoryType, useCategoryStore, type CategoryRecord, type CategoryType } from "@/stores/category";
@@ -18,6 +18,24 @@ type Product = {
   categoryId?: string;
   categorySlug?: string;
   categoryType?: string;
+  variants: ProductVariant[];
+};
+
+type ProductVariant = {
+  id: string;
+  color: string;
+  size: string;
+  price: number;
+  compareAtPrice?: number;
+  stock?: number;
+  image: string;
+  isActive: boolean;
+};
+
+type ColorVariantOption = {
+  color: string;
+  variant: ProductVariant;
+  disabled: boolean;
 };
 
 type CategoryOption = {
@@ -42,8 +60,12 @@ const minPrice = ref(0);
 const maxPrice = ref<number | null>(null);
 const sortBy = ref("featured");
 const page = ref(1);
-const pageSize = 8;
+const pageSize = 20;
 const filtersOpen = ref(false);
+const brand = ref("");
+const tags = ref("");
+const categoryReady = ref(false);
+const selectedVariants = ref<Record<string, string>>({});
 
 function field(record: ProductRecord, ...keys: string[]): unknown {
   for (const key of keys) {
@@ -62,12 +84,10 @@ function textValue(value: unknown): string {
   return "";
 }
 
-const slugify = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-
 function toCategory(record: CategoryRecord): CategoryOption {
-  const idValue = field(record, "category_id", "id", "_id");
-  const name = textValue(field(record, "name", "category_name", "title")) || "Category";
-  const slug = textValue(field(record, "slug", "category_slug")) || slugify(name);
+  const idValue = field(record, "_id", "category_id", "id");
+  const name = textValue(field(record, "title", "name", "category_name"));
+  const slug = textValue(field(record, "slug", "category_slug"));
   const parentValue = record.parent ?? record.parent_id ?? record.parentId;
   let parentId: string | undefined;
   let parentSlug: string | undefined;
@@ -80,19 +100,32 @@ function toCategory(record: CategoryRecord): CategoryOption {
     parentId = String(parentValue);
   }
   const type = isCategoryType(record.type) ? record.type : undefined;
-  return { id: String(idValue ?? slug), slug, name, type, parentId, parentSlug };
+  return { id: String(idValue ?? ""), slug, name, type, parentId, parentSlug };
 }
 
-function imageValue(product: ProductRecord): string {
+function imageFrom(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") {
+    const image = value as Record<string, unknown>;
+    return String(image.url ?? image.image_url ?? image.path ?? image.src ?? "");
+  }
+  return "";
+}
+
+function imageValue(product: ProductRecord, variants: Record<string, unknown>[]): string {
   const direct = field(product, "image", "image_url", "product_image", "thumbnail", "cover_image");
-  if (typeof direct === "string") return direct;
+  const directImage = imageFrom(direct);
+  if (directImage) return directImage;
   const imageList = field(product, "images", "product_images", "image_urls");
   if (Array.isArray(imageList)) {
-    const first = imageList[0];
-    if (typeof first === "string") return first;
-    if (first && typeof first === "object") {
-      const image = first as Record<string, unknown>;
-      return String(image.url ?? image.image_url ?? image.path ?? "");
+    const image = imageList.map(imageFrom).find(Boolean);
+    if (image) return image;
+  }
+  for (const variant of variants) {
+    const images = variant.images;
+    if (Array.isArray(images)) {
+      const image = images.map(imageFrom).find(Boolean);
+      if (image) return image;
     }
   }
   return "";
@@ -103,33 +136,116 @@ function toProduct(record: ProductRecord): Product {
   const categoryRecord = categoryValue && typeof categoryValue === "object"
     ? categoryValue as Record<string, unknown>
     : {};
-  const price = Number(field(record, "price", "product_price", "sale_price", "current_price") ?? 0);
-  const oldPriceValue = field(record, "oldPrice", "old_price", "original_price", "compare_at_price", "regular_price");
+  const rawVariants = field(record, "variants");
+  const variants = Array.isArray(rawVariants)
+    ? rawVariants.filter((variant): variant is Record<string, unknown> => Boolean(variant) && typeof variant === "object" && (variant as Record<string, unknown>).isActive !== false)
+    : [];
+  const mappedVariants: ProductVariant[] = variants.map((variant, index) => {
+    const options = variant.options && typeof variant.options === "object"
+      ? variant.options as Record<string, unknown>
+      : {};
+    const variantPrice = Number(variant.price);
+    const compareAtPrice = variant.compareAtPrice === undefined || variant.compareAtPrice === null
+      ? Number.NaN
+      : Number(variant.compareAtPrice);
+    const stock = variant.stock === undefined || variant.stock === null ? undefined : Number(variant.stock);
+    const variantImages = Array.isArray(variant.images) ? variant.images : [];
+    return {
+      id: String(variant._id ?? variant.id ?? variant.sku ?? index),
+      color: textValue(options.color ?? variant.color),
+      size: textValue(options.size ?? variant.size),
+      price: Number.isFinite(variantPrice) ? variantPrice : 0,
+      compareAtPrice: Number.isFinite(compareAtPrice) ? compareAtPrice : undefined,
+      stock: stock !== undefined && Number.isFinite(stock) ? stock : undefined,
+      image: variantImages.map(imageFrom).find(Boolean) ?? "",
+      isActive: variant.isActive !== false,
+    };
+  });
+  const cheapestVariant = mappedVariants
+    .filter((variant) => Number.isFinite(Number(variant.price)))
+    .sort((a, b) => a.price - b.price)[0];
+  const price = Number(field(record, "minPrice", "min_price", "price", "product_price", "sale_price", "current_price") ?? cheapestVariant?.price ?? 0);
+  const matchingVariant = mappedVariants.find((variant) => variant.price === price && variant.compareAtPrice !== undefined);
+  const oldPriceValue = field(record, "compareAtPrice", "compare_at_price", "oldPrice", "old_price", "original_price", "regular_price") ?? matchingVariant?.compareAtPrice;
   const oldPrice = oldPriceValue === undefined ? undefined : Number(oldPriceValue);
   const name = textValue(field(record, "name", "product_name", "title")) || "Product";
   const id = field(record, "id", "product_id", "_id");
+  const variantColors = mappedVariants.map((variant) => variant.color).filter(Boolean);
+  const color = textValue(field(record, "color", "color_name", "variant_color")) || [...new Set(variantColors)].join(", ");
 
   return {
     id: typeof id === "string" || typeof id === "number" ? id : name,
     name,
-    category: textValue(categoryValue) || "Other",
+    category: textValue(categoryValue),
     price: Number.isFinite(price) ? price : 0,
     oldPrice: oldPrice !== undefined && Number.isFinite(oldPrice) ? oldPrice : undefined,
-    color: textValue(field(record, "color", "color_name", "variant_color")),
-    image: imageValue(record),
+    color,
+    image: imageValue(record, []),
     badge: textValue(field(record, "badge", "label", "tag")) || undefined,
     brand: textValue(field(record, "brand", "brand_name", "manufacturer")) || undefined,
     createdAt: textValue(field(record, "created_at", "createdAt", "updated_at", "updatedAt")) || undefined,
-    categoryId: String(field(record, "category_id", "categoryId") ?? categoryRecord.category_id ?? categoryRecord.id ?? categoryRecord._id ?? "") || undefined,
+    categoryId: String(field(record, "category_id", "categoryId") ?? categoryRecord._id ?? categoryRecord.category_id ?? categoryRecord.id ?? "") || undefined,
     categorySlug: textValue(field(record, "category_slug", "categorySlug")) || textValue(categoryRecord.slug ?? categoryRecord.category_slug) || undefined,
     categoryType: textValue(field(record, "category_type", "categoryType") ?? categoryRecord.type) || undefined,
+    variants: mappedVariants,
   };
+}
+
+function colorVariantOptions(product: Product): ColorVariantOption[] {
+  const colors = new Map<string, ProductVariant[]>();
+  for (const variant of product.variants) {
+    if (!variant.color) continue;
+    const key = variant.color.trim().toLowerCase();
+    colors.set(key, [...(colors.get(key) ?? []), variant]);
+  }
+  return [...colors.entries()].map(([, variants]) => {
+    const inStock = variants.filter((variant) => variant.stock === undefined || variant.stock > 0);
+    const choices = inStock.length ? inStock : variants;
+    const variant = choices.reduce((cheapest, current) => current.price < cheapest.price ? current : cheapest);
+    return { color: variant.color, variant, disabled: inStock.length === 0 };
+  });
+}
+
+function selectedVariant(product: Product): ProductVariant | undefined {
+  const selectedId = selectedVariants.value[String(product.id)];
+  if (selectedId) {
+    const selected = product.variants.find((variant) => variant.id === selectedId);
+    if (selected) return selected;
+  }
+  return product.variants.find((variant) => variant.price === product.price && (variant.stock === undefined || variant.stock > 0))
+    ?? colorVariantOptions(product).find((option) => !option.disabled)?.variant
+    ?? product.variants[0];
+}
+
+function selectVariant(product: Product, variant: ProductVariant) {
+  selectedVariants.value[String(product.id)] = variant.id;
+}
+
+function variantOldPrice(product: Product, variant?: ProductVariant) {
+  return variant?.compareAtPrice ?? (variant?.price === product.price ? product.oldPrice : undefined);
+}
+
+function displayedOldPrice(product: Product) {
+  const variant = selectedVariant(product);
+  const oldPrice = variantOldPrice(product, variant);
+  return variant && oldPrice && oldPrice > variant.price ? oldPrice : undefined;
+}
+
+function discountPercent(product: Product) {
+  const variant = selectedVariant(product);
+  const oldPrice = displayedOldPrice(product);
+  return variant && oldPrice ? Math.round((1 - variant.price / oldPrice) * 100) : 0;
+}
+
+function variantAlt(product: Product) {
+  const color = selectedVariant(product)?.color;
+  return color ? `${product.name} - ${color}` : product.name;
 }
 
 const products = computed(() => productStore.products.map(toProduct));
 const categories = computed(() => categoryStore.categories.map(toCategory));
 const parentCategories = computed(() => categories.value.filter((item) => !item.parentId && !item.parentSlug));
-const maxAvailablePrice = computed(() => Math.max(150, ...products.value.map((product) => product.price)));
+const maxAvailablePrice = computed(() => Math.max(0, ...products.value.map((product) => product.price)));
 const effectiveMaxPrice = computed(() => maxPrice.value ?? maxAvailablePrice.value);
 
 const childCategories = (parent: CategoryOption) =>
@@ -140,17 +256,17 @@ const childCategories = (parent: CategoryOption) =>
 const categoryFromRoute = (value: unknown): string => {
   const normalized = String(value ?? "all").toLowerCase();
   if (!normalized || normalized === "all") return "All";
-  const categorySlug = normalized === "fashion" ? "women" : normalized === "kitchen" ? "home" : normalized;
+  const categorySlug = normalized;
   const found = categories.value.find((item) =>
     item.slug.toLowerCase() === categorySlug ||
-    item.id.toLowerCase() === categorySlug ||
-    slugify(item.name) === categorySlug,
+    item.id.toLowerCase() === categorySlug
   );
   if (found) return found.slug;
   return categorySlug;
 };
 
 watch([() => route.params.category, () => route.query.type], async ([value, rawType]) => {
+  categoryReady.value = false;
   category.value = categoryFromRoute(value);
   page.value = 1;
   categoryStore.clearSelectedCategory();
@@ -160,6 +276,7 @@ watch([() => route.params.category, () => route.query.type], async ([value, rawT
   if (typeValue !== undefined && !isCategoryType(typeValue)) {
     await categoryStore.fetchCategories(typeValue).catch(() => undefined);
     categoryStore.clearSelectedCategory();
+    productStore.clearProducts();
     return;
   }
 
@@ -179,41 +296,49 @@ watch([() => route.params.category, () => route.query.type], async ([value, rawT
   } else {
     categoryStore.clearSelectedCategory();
   }
+  if (categoryStore.selectedCategoryError || (!type && requestedSlug.toLowerCase() !== "all")) {
+    productStore.clearProducts();
+    return;
+  }
+  categoryReady.value = true;
+  await loadProductPage();
 }, { immediate: true });
 watch(() => route.query.search, (value) => {
   search.value = String(value ?? "");
 }, { immediate: true });
-onMounted(() => {
-  void reloadProducts();
-});
+async function loadProductPage() {
+  if (!categoryReady.value) return;
+  const selectedCategory = categories.value.find((item) => item.slug === category.value || item.id === category.value);
+  const detailCategory = categoryStore.selectedCategory ? toCategory(categoryStore.selectedCategory) : undefined;
+  const selectedId = selectedCategory?.id ?? detailCategory?.id;
+  const departmentRoot = departmentType.value
+    ? parentCategories.value.find((item) => item.type === departmentType.value) ?? parentCategories.value[0]
+    : undefined;
+  const categoryId = category.value === "All" ? departmentRoot?.id : selectedId;
 
-async function reloadProducts() {
-  await productStore.fetchProducts().catch(() => undefined);
+  if (category.value !== "All" && !categoryId) {
+    productStore.clearProducts();
+    return;
+  }
+  if (departmentType.value && !categoryId) {
+    productStore.clearProducts();
+    return;
+  }
+
+  await productStore.fetchProducts({
+    category: categoryId,
+    page: page.value,
+    limit: pageSize,
+    search: search.value.trim() || undefined,
+    minPrice: minPrice.value > 0 ? minPrice.value : undefined,
+    maxPrice: maxPrice.value,
+    brand: brand.value.trim() || undefined,
+    tags: tags.value.split(",").map((tag) => tag.trim()).filter(Boolean),
+  }).catch(() => undefined);
 }
 
 const filteredProducts = computed(() => {
-  const query = search.value.trim().toLowerCase();
-  const selectedCategory = categories.value.find((item) => item.slug === category.value || item.id === category.value);
-  const selectedCategoryGroup = category.value === "All" && departmentType.value
-    ? categories.value
-    : selectedCategory
-    ? selectedCategory.parentId
-      ? [selectedCategory]
-      : [selectedCategory, ...childCategories(selectedCategory)]
-    : [];
-  const result = products.value.filter((product) =>
-    ((category.value === "All" && !departmentType.value) || selectedCategoryGroup.some((item) =>
-      product.categoryId === item.id ||
-      ((!departmentType.value || !product.categoryType || product.categoryType === departmentType.value) && (
-        product.categorySlug === item.slug ||
-        slugify(product.category) === item.slug ||
-        product.category.toLowerCase() === item.name.toLowerCase()
-      ))
-    )) &&
-    product.price >= minPrice.value &&
-    product.price <= effectiveMaxPrice.value &&
-    (!query || `${product.name} ${product.category} ${product.color} ${product.brand ?? ""}`.toLowerCase().includes(query)),
-  );
+  const result = products.value.slice();
   if (sortBy.value === "price-low") result.sort((a, b) => a.price - b.price);
   if (sortBy.value === "price-high") result.sort((a, b) => b.price - a.price);
   if (sortBy.value === "name") result.sort((a, b) => a.name.localeCompare(b.name));
@@ -229,17 +354,24 @@ const filteredProducts = computed(() => {
   return result;
 });
 
-const pageCount = computed(() => Math.max(1, Math.ceil(filteredProducts.value.length / pageSize)));
+const pageCount = computed(() => Math.max(1, productStore.pagination.totalPages));
 const listingTitle = computed(() => {
   if (category.value === "All") return departmentType.value?.toUpperCase() ?? "NEW ARRIVALS";
   return categories.value.find((item) => item.slug === category.value || item.id === category.value)?.name.toUpperCase() ?? category.value.toUpperCase();
 });
-const visibleProducts = computed(() => filteredProducts.value.slice((page.value - 1) * pageSize, page.value * pageSize));
-const resultStart = computed(() => filteredProducts.value.length ? (page.value - 1) * pageSize + 1 : 0);
-const resultEnd = computed(() => Math.min(page.value * pageSize, filteredProducts.value.length));
+const visibleProducts = filteredProducts;
+const resultStart = computed(() => productStore.pagination.total ? (page.value - 1) * pageSize + 1 : 0);
+const resultEnd = computed(() => Math.min((page.value - 1) * pageSize + products.value.length, productStore.pagination.total));
 
-watch([category, minPrice, maxPrice, sortBy], () => { page.value = 1; });
-watch(pageCount, (count) => { if (page.value > count) page.value = count; });
+watch([search, minPrice, maxPrice, brand, tags, sortBy], () => {
+  if (page.value !== 1) page.value = 1;
+  else void loadProductPage();
+});
+watch(page, () => { void loadProductPage(); });
+watch(() => productStore.pagination.totalPages, (count) => {
+  const lastPage = Math.max(1, count);
+  if (page.value > lastPage) page.value = lastPage;
+});
 
 function setCategory(value: string, type?: CategoryType) {
   category.value = value;
@@ -260,6 +392,10 @@ function clearFilters() {
   category.value = "All";
   minPrice.value = 0;
   maxPrice.value = null;
+  brand.value = "";
+  tags.value = "";
+  sortBy.value = "featured";
+  page.value = 1;
   router.replace({ path: "/products/all" });
 }
 </script>
@@ -270,7 +406,7 @@ function clearFilters() {
       <header class="border-b border-border pb-4">
         <h1 class="text-xl font-semibold tracking-wide text-text-strong sm:text-2xl">
           {{ listingTitle }}
-          <span class="ml-1 text-sm font-normal text-text-muted">({{ filteredProducts.length }} items)</span>
+          <span class="ml-1 text-sm font-normal text-text-muted">({{ productStore.pagination.total }} items)</span>
         </h1>
         <div class="mt-5 flex flex-wrap items-start gap-2 pb-1">
           <button type="button" @click="setCategory('All')" class="shrink-0 border px-4 py-2 text-xs font-medium uppercase tracking-wide transition" :class="category === 'All' ? 'border-text-strong bg-text-strong text-dominant' : 'border-border bg-secondary text-text hover:border-text-strong'">New Arrivals</button>
@@ -334,13 +470,19 @@ function clearFilters() {
             <input id="max-price" v-model.number="maxPrice" type="number" :min="minPrice" :max="maxAvailablePrice" class="!h-9 !w-24 !border !border-border !bg-secondary !px-2 !text-sm !text-text-strong placeholder:!text-text-muted" :placeholder="`$${maxAvailablePrice}`" />
           </div>
         </div>
-        <div class="flex items-end">
+        <div class="space-y-4">
+          <label class="block text-xs uppercase tracking-wide text-text-muted" for="brand-filter">Brand
+            <input id="brand-filter" v-model.trim="brand" type="text" class="mt-2 !h-9 w-full !border !border-border !bg-secondary !px-2 !text-sm !text-text-strong" placeholder="Brand" />
+          </label>
+          <label class="block text-xs uppercase tracking-wide text-text-muted" for="tags-filter">Tags
+            <input id="tags-filter" v-model="tags" type="text" class="mt-2 !h-9 w-full !border !border-border !bg-secondary !px-2 !text-sm !text-text-strong" placeholder="Comma-separated tags" />
+          </label>
           <button type="button" @click="clearFilters" class="text-xs font-semibold uppercase tracking-wide text-text-strong underline underline-offset-4">Clear all</button>
         </div>
       </div>
 
       <div class="flex items-center justify-between py-4 text-xs text-text-muted">
-        <span>Showing {{ resultStart }}–{{ resultEnd }} of {{ filteredProducts.length }} items</span>
+        <span>Showing {{ resultStart }}–{{ resultEnd }} of {{ productStore.pagination.total }} items</span>
         <span class="hidden sm:inline">New styles added regularly</span>
       </div>
 
@@ -348,14 +490,14 @@ function clearFilters() {
       <div v-else-if="productStore.error" class="flex min-h-64 flex-col items-center justify-center px-6 text-center">
         <span class="text-lg font-medium text-text-strong">Products could not be loaded</span>
         <p class="mt-2 text-sm text-text-muted">{{ productStore.error }}</p>
-        <button type="button" @click="productStore.fetchProducts()" class="mt-4 text-xs font-semibold uppercase text-text-strong underline underline-offset-4">Try again</button>
+        <button type="button" @click="loadProductPage" class="mt-4 text-xs font-semibold uppercase text-text-strong underline underline-offset-4">Try again</button>
       </div>
       <div v-else-if="visibleProducts.length" class="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4 lg:gap-x-5">
         <article v-for="product in visibleProducts" :key="product.id" class="group min-w-0">
           <div class="relative aspect-[3/4] overflow-hidden bg-dominant-alt">
-            <img v-if="product.image" :src="product.image" :alt="product.name" loading="lazy" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]" />
-            <span v-if="product.oldPrice" class="absolute left-0 top-3 bg-secondary px-2 py-1 text-[10px] font-semibold text-text-strong">
-              -{{ Math.round((1 - product.price / product.oldPrice) * 100) }}%
+            <img v-if="selectedVariant(product)?.image || product.image" :src="selectedVariant(product)?.image || product.image" :alt="variantAlt(product)" loading="lazy" class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.025]" />
+            <span v-if="discountPercent(product)" class="absolute left-0 top-3 bg-secondary px-2 py-1 text-[10px] font-semibold text-text-strong">
+              -{{ discountPercent(product) }}%
             </span>
             <span v-else-if="product.badge" class="absolute left-0 top-3 bg-secondary px-2 py-1 text-[10px] font-semibold uppercase text-text-strong">{{ product.badge }}</span>
             <button type="button" :aria-label="`Add ${product.name} to wishlist`" class="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-text hover:text-text-strong">
@@ -367,11 +509,26 @@ function clearFilters() {
             <div class="mt-1 flex items-start justify-between gap-2">
               <h2 class="line-clamp-2 text-xs leading-5 text-text-strong sm:text-sm">{{ product.name }}</h2>
               <div class="shrink-0 text-right text-xs sm:text-sm">
-                <p class="font-medium text-text-strong">US ${{ product.price.toFixed(2) }}</p>
-                <p v-if="product.oldPrice" class="text-[11px] text-text-muted line-through">US ${{ product.oldPrice.toFixed(2) }}</p>
+                <p class="font-medium text-text-strong">US ${{ (selectedVariant(product)?.price ?? product.price).toFixed(2) }}</p>
+                <p v-if="displayedOldPrice(product)" class="text-[11px] text-text-muted line-through">US ${{ displayedOldPrice(product)?.toFixed(2) }}</p>
               </div>
             </div>
-            <p v-if="product.color" class="mt-1 text-[11px] text-text-muted">{{ product.color }}</p>
+            <div v-if="colorVariantOptions(product).length" class="mt-2 flex flex-wrap gap-1.5" role="group" :aria-label="`Choose a color for ${product.name}`">
+              <button
+                v-for="option in colorVariantOptions(product)"
+                :key="option.color"
+                type="button"
+                :disabled="option.disabled"
+                :aria-pressed="selectedVariant(product)?.id === option.variant.id"
+                :title="option.disabled ? `${option.color} - out of stock` : option.color"
+                @click="selectVariant(product, option.variant)"
+                class="rounded border px-2 py-1 text-[10px] transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                :class="selectedVariant(product)?.id === option.variant.id ? 'border-text-strong bg-text-strong text-dominant' : 'border-border text-text hover:border-text-strong'"
+              ><span class="mr-1.5 inline-block h-2.5 w-2.5 rounded-full border border-border" :style="{ backgroundColor: option.color }" aria-hidden="true"></span>{{ option.color }}</button>
+            </div>
+            <p v-else-if="product.color" class="mt-1 text-[11px] text-text-muted">{{ product.color }}</p>
+            <p v-if="selectedVariant(product)?.size" class="mt-1 text-[10px] text-text-muted">Size: {{ selectedVariant(product)?.size }}</p>
+            <p v-if="selectedVariant(product)?.stock === 0" class="mt-1 text-[10px] font-medium text-text-muted">Out of stock</p>
           </div>
         </article>
       </div>
@@ -382,9 +539,9 @@ function clearFilters() {
       </div>
 
       <nav v-if="pageCount > 1" class="mt-12 flex items-center justify-center gap-1" aria-label="Pagination">
-        <button type="button" :disabled="page === 1" @click="page--" class="px-3 py-2 text-sm text-text-strong disabled:text-text-muted" aria-label="Previous page">‹</button>
+        <button type="button" :disabled="!productStore.pagination.hasPreviousPage" @click="page--" class="px-3 py-2 text-sm text-text-strong disabled:text-text-muted" aria-label="Previous page">‹</button>
         <button v-for="number in pageCount" :key="number" type="button" @click="page = number" class="min-w-9 border-b px-3 py-2 text-sm" :class="page === number ? 'border-text-strong font-semibold text-text-strong' : 'border-transparent text-text-muted'" :aria-current="page === number ? 'page' : undefined">{{ number }}</button>
-        <button type="button" :disabled="page === pageCount" @click="page++" class="px-3 py-2 text-sm text-text-strong disabled:text-text-muted" aria-label="Next page">›</button>
+        <button type="button" :disabled="!productStore.pagination.hasNextPage" @click="page++" class="px-3 py-2 text-sm text-text-strong disabled:text-text-muted" aria-label="Next page">›</button>
       </nav>
     </section>
   </main>

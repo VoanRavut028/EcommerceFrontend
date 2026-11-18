@@ -86,7 +86,10 @@ export const useCategoryStore = defineStore("category", () => {
         const { data } = await api.get("/categories", {
           params: categoryType ? { type: categoryType } : undefined,
         });
-        return responseCategories(data);
+        return responseCategories(data).map((category) => ({
+          ...category,
+          type: category.type ?? categoryType,
+        }));
       }));
       const fetched = results.flat();
       if (requestId === listRequestId) {
